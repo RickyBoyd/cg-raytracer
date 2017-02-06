@@ -4,6 +4,7 @@
 #include "SDLauxiliary.h"
 #include "TestModel.h"
 #include <limits>
+#include <math.h>
 
 using namespace std;
 using glm::vec3;
@@ -27,6 +28,8 @@ vector<Triangle> triangles;
 float f = SCREEN_WIDTH/2;
 vec3 cameraPos( 0.0f, 0.0f, -2.0f);
 vec3 black( 0.0, 0.0, 0.0);
+vec3 lightPos( 0, -0.5, -0.7 );
+vec3 lightColor = 14.f * vec3( 1, 1, 1 );
 
 /* ----------------------------------------------------------------------------*/
 /* FUNCTIONS                                                                   */
@@ -36,6 +39,9 @@ void Draw();
 void Interpolate( float a, float b, vector<float>& result );
 void Interpolate( vec3 a, vec3 b, vector<vec3>& result );
 bool ClosestIntersection( vec3 start, vec3 dir, const vector<Triangle>& triangles, Intersection& closestIntersection );
+vec3 DirectLight( const Intersection& i );
+vec3 SurfaceColor(const Intersection& i);
+
 
 int main( int argc, char* argv[] )
 {
@@ -82,7 +88,8 @@ void Draw()
 			bool isInterection = ClosestIntersection(cameraPos, d, triangles, intersection);
 			if(isInterection)
 			{
-				PutPixelSDL(screen, x, y, triangles[intersection.triangleIndex].color);
+				vec3 color = SurfaceColor(intersection);
+				PutPixelSDL(screen, x, y, color);
 			}
 			else
 			{
@@ -119,13 +126,13 @@ bool ClosestIntersection( vec3 start, vec3 dir, const vector<Triangle>& triangle
 		mat3 A( -dir, e1, e2 );
 		vec3 x = glm::inverse( A ) * b;
 
-		if( (x.x>=0) && (x.y>0) && (x.z>0) && (x.y + x.z <= 1)) //Intersection!
+		if( (x.x>=0) && (x.y>=0) && (x.z>=0) && (x.y + x.z <= 1)) //Intersection!
 		{
 			//vec3 r = start + dir * x.x;
 			//float r_dis = glm::length(r);
 			if(closestIntersection.distance > x.x)
 			{
-				closestIntersection.position = x;
+				closestIntersection.position = start + x.x*dir;
 				closestIntersection.distance = x.x;
 				closestIntersection.triangleIndex = i;
 			}
@@ -134,6 +141,20 @@ bool ClosestIntersection( vec3 start, vec3 dir, const vector<Triangle>& triangle
 			
 	}
 	return closestIntersection.distance != std::numeric_limits<float>::max();
+}
+
+vec3 SurfaceColor(const Intersection& i)
+{
+	return triangles[i.triangleIndex].color*DirectLight(i);
+}
+
+vec3 DirectLight( const Intersection& i )
+{
+	vec3 lightdir = lightPos - i.position;
+	float r = glm::length(lightdir);
+	vec3 B = (lightColor / (float)(4*r*r*M_PI));
+	float dp = glm::dot(glm::normalize(triangles[i.triangleIndex].normal), glm::normalize(lightdir));
+	return B * glm::max(dp, 0.0f);
 }
 
 
