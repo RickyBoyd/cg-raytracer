@@ -5,6 +5,7 @@
 #include "TestModel.h"
 #include <limits>
 #include <math.h>
+#include <omp.h>
 
 using namespace std;
 using glm::vec3;
@@ -19,13 +20,12 @@ struct Intersection {
 /* ----------------------------------------------------------------------------*/
 /* GLOBAL VARIABLES                                                            */
 
-const int SCREEN_WIDTH = 500;
-const int SCREEN_HEIGHT = 500;
+const int SCREEN_WIDTH = 100;
+const int SCREEN_HEIGHT = 100;
 SDL_Surface *screen;
 int t;
 vector<Triangle> triangles;
 float f = SCREEN_WIDTH / 2;
-vec3 cameraPos(0.0f, 0.0f, -2.0f);
 vec3 black(0.0, 0.0, 0.0);
 vec3 lightPos(0, -0.5, -0.7);
 vec3 lightColor = 14.f * vec3(1, 1, 1);
@@ -33,9 +33,9 @@ vec3 lightColor = 14.f * vec3(1, 1, 1);
 /* ----------------------------------------------------------------------------*/
 /* FUNCTIONS                                                                   */
 
-void Update();
+void Update(glm::vec3 &cameraPos);
 
-void Draw();
+void Draw(glm::vec3 &cameraPos);
 
 void Interpolate(float a, float b, vector<float> &result);
 
@@ -45,47 +45,67 @@ bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles
 
 vec3 DirectLight(const Intersection &i);
 
-vec3 SurfaceColor(const Intersection &i);
+vec3 SurfaceColour(const Intersection &i);
 
 
 int main(int argc, char *argv[]) {
     screen = InitializeSDL(SCREEN_WIDTH, SCREEN_HEIGHT);
     t = SDL_GetTicks();    // Set start value for timer.
 
-    LoadTestModel(triangles);
-    cout << triangles.size() << endl;
+    cout << "OMP Max Threads: " << omp_get_max_threads() << endl;
 
+    LoadTestModel(triangles);
+    cout << "Loaded " << triangles.size() << " tris" << endl;
+
+    vec3 cameraPos(0.0f, 0.0f, -2.0f);
 
     while (NoQuitMessageSDL()) {
-        Draw();
+        Draw(cameraPos);
+        Update(cameraPos);
     }
 
     SDL_SaveBMP(screen, "screenshot.bmp");
     return 0;
 }
 
-void Update() {
+void Update(glm::vec3 &cameraPos) {
     // Compute frame time:
     int t2 = SDL_GetTicks();
     float dt = float(t2 - t);
     t = t2;
     cout << "Render time: " << dt << " ms." << endl;
 
+    static float movementSpeed = 0.001;
+
+    Uint8* keystate = SDL_GetKeyState(0);
+    if (keystate[SDLK_UP]) {
+        cameraPos.y -= dt * movementSpeed;
+    }
+    if (keystate[SDLK_DOWN]) {
+        cameraPos.y += dt * movementSpeed;
+    }
+    if (keystate[SDLK_LEFT]) {
+        cameraPos.x -= dt * movementSpeed;
+    }
+    if (keystate[SDLK_RIGHT]) {
+        cameraPos.x += dt * movementSpeed;
+    }
 }
 
-void Draw() {
+void Draw(glm::vec3 &cameraPos) {
     //SDL_FillRect( screen, 0, 0 );
 
     if (SDL_MUSTLOCK(screen))
         SDL_LockSurface(screen);
 
-    for (int y = -0; y < SCREEN_HEIGHT; y++) {
+#pragma omp parallel for
+    for (int y = 0; y < SCREEN_HEIGHT; y++) {
         for (int x = 0; x < SCREEN_WIDTH; x++) {
             vec3 d(x - SCREEN_WIDTH / 2, y - SCREEN_HEIGHT / 2, f);
-            Intersection intersection;
-            bool isInterection = ClosestIntersection(cameraPos, d, triangles, intersection);
-            if (isInterection) {
-                vec3 color = SurfaceColor(intersection);
+            Intersection maybeIntersection;
+            bool hasIntersection = ClosestIntersection(cameraPos, d, triangles, maybeIntersection);
+            if (hasIntersection) {
+                vec3 color = SurfaceColour(maybeIntersection);
                 PutPixelSDL(screen, x, y, color);
             } else {
                 //cout << " NO intersection at (" << x <<"," << y << ")" << endl;
@@ -135,7 +155,7 @@ bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles
     return closestIntersection.distance != std::numeric_limits<float>::max();
 }
 
-vec3 SurfaceColor(const Intersection &i) {
+vec3 SurfaceColour(const Intersection &i) {
     return triangles[i.triangleIndex].color * DirectLight(i);
 }
 
@@ -160,17 +180,5 @@ void Interpolate(float a, float b, vector<float> &result) {
         for (int i = 1; i < result.size(); i++) {
             result[i] = result[i - 1] + step;
         }
-    }
-}
-
-void Interpolate(vec3 a, vec3 b, vector<vec3> &result) {
-    vector<float> result_x(result.size());
-    Interpolate(a.x, b.x, result_x);
-    vector<float> result_y(result.size());
-    Interpolate(a.y, b.y, result_y);
-    vector<float> result_z(result.size());
-    Interpolate(a.z, b.z, result_z);
-    for (int i = 0; i < result.size(); i++) {
-        result[i] = vec3(result_x[i], result_y[i], result_z[i]);
     }
 }
