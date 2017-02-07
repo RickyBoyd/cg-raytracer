@@ -10,8 +10,8 @@ B_DIR=Build
 EXEC=$(B_DIR)/$(FILE)
 
 # default build settings
-CC_OPTS=-c -pipe -Wall -Wno-switch -ggdb -g3 
-LN_OPTS=
+CC_OPTS=-c -pipe -Wall -Wno-switch -ggdb -g3 -Ofast -fopenmp
+LN_OPTS=-fopenmp
 CC=g++
 
 ########
@@ -19,6 +19,7 @@ CC=g++
 SDL_CFLAGS := $(shell sdl-config --cflags)
 GLM_CFLAGS := -I$(GLMDIR)
 SDL_LDFLAGS := $(shell sdl-config --libs)
+LDFLAGS :=
 
 ########
 #   This is the default action
@@ -40,7 +41,7 @@ $(B_DIR)/$(FILE).o : $(S_DIR)/$(FILE).cpp $(S_DIR)/$(FILE).h
 ########
 #   Main build rule     
 Build : $(OBJ) Makefile
-	$(CC) $(LN_OPTS) -o $(EXEC) $(OBJ) $(SDL_LDFLAGS)
+	$(CC) $(LN_OPTS) -o $(EXEC) $(OBJ) $(SDL_LDFLAGS) $(LDFLAGS)
 
 
 clean:
