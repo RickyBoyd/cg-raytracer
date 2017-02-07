@@ -26,8 +26,8 @@ SDL_Surface *screen;
 int t;
 vector<Triangle> triangles;
 float f = SCREEN_WIDTH / 2;
-vec3 black(0.0, 0.0, 0.0);
-vec3 lightPos(0, -0.5, -0.7);
+vec3 black(0.0f, 0.0f, 0.0f);
+vec3 lightPos(0.0f, 0.5f, -0.7f);
 vec3 lightColor = 14.f * vec3(1, 1, 1);
 
 /* ----------------------------------------------------------------------------*/
@@ -58,6 +58,7 @@ int main(int argc, char *argv[]) {
     cout << "Loaded " << triangles.size() << " tris" << endl;
 
     vec3 cameraPos(0.0f, 0.0f, -2.0f);
+    float yaw = 0.0f;
 
     while (NoQuitMessageSDL()) {
         Draw(cameraPos);
@@ -79,10 +80,10 @@ void Update(glm::vec3 &cameraPos) {
 
     Uint8* keystate = SDL_GetKeyState(0);
     if (keystate[SDLK_UP]) {
-        cameraPos.y -= dt * movementSpeed;
+        cameraPos.y += dt * movementSpeed;
     }
     if (keystate[SDLK_DOWN]) {
-        cameraPos.y += dt * movementSpeed;
+        cameraPos.y -= dt * movementSpeed;
     }
     if (keystate[SDLK_LEFT]) {
         cameraPos.x -= dt * movementSpeed;
@@ -101,7 +102,9 @@ void Draw(glm::vec3 &cameraPos) {
 #pragma omp parallel for
     for (int y = 0; y < SCREEN_HEIGHT; y++) {
         for (int x = 0; x < SCREEN_WIDTH; x++) {
-            vec3 d(x - SCREEN_WIDTH / 2, y - SCREEN_HEIGHT / 2, f);
+            int u = x - SCREEN_WIDTH / 2;
+            int v = (SCREEN_HEIGHT - y)  - SCREEN_HEIGHT / 2;
+            vec3 d(u, v, f);
             Intersection maybeIntersection;
             bool hasIntersection = ClosestIntersection(cameraPos, d, triangles, maybeIntersection);
             if (hasIntersection) {
