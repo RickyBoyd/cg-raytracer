@@ -222,35 +222,21 @@ vec3 DirectLight(const Intersection &intersection, vector<Light> &lights) {
     glm::vec3 lightIntensity(0.0f, 0.0f, 0.0f);
 
     //Cast ray with all light sources and check if closest intersection is before the light
-    bool isInShadow = true;
-    Intersection shadowTestIntersection;
-    for (int i = 0; i < lights.size(); i++) {
-        vec3 intersectionPos = intersection.position;
-        vec3 shadowRay = lights[i].position - intersectionPos;
+    Intersection shadowRayIntersection;
 
-        bool isIntersection = ClosestIntersection(intersectionPos, shadowRay, triangles, shadowTestIntersection,
+    for (int i = 0; i < lights.size(); i++) {
+        vec3 shadowRay = lights[i].position - intersection.position;
+        bool isIntersection = ClosestIntersection(intersection.position, shadowRay, triangles, shadowRayIntersection,
                                                   intersection.triangleIndex);
-
-        vec3 intersectVec = intersection.position - shadowTestIntersection.position;
-
-        float lightDis = glm::length(shadowRay);
-        float intersectDis = glm::length(intersectVec); /// This
-
-        if (!isIntersection || intersectDis > lightDis) //This distance is somehow wrong?
+        vec3 intersectVec = intersection.position - shadowRayIntersection.position;
+        float r = glm::length(shadowRay);
+        float intersectDis = glm::length(intersectVec);
+        if(!isIntersection || intersectDis > r)
         {
-            isInShadow = false;
-            break;
+        	vec3 B = (lights[i].color / (float) (4 * r * r * M_PI));
+        	float dp = glm::dot(glm::normalize(triangles[intersection.triangleIndex].normal), glm::normalize(shadowRay));
+        	lightIntensity += B * glm::max(dp, 0.0f);
         }
-    }
-    if (isInShadow) return lightIntensity;
-
-
-    for (int i = 0; i < lights.size(); i++) {
-        vec3 lightdir = lights[i].position - intersection.position;
-        float r = glm::length(lightdir);
-        vec3 B = (lights[i].color / (float) (4 * r * r * M_PI));
-        float dp = glm::dot(glm::normalize(triangles[intersection.triangleIndex].normal), glm::normalize(lightdir));
-        lightIntensity += B * glm::max(dp, 0.0f);
     }
     return lightIntensity;
 }
