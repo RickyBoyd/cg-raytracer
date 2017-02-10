@@ -58,6 +58,8 @@ bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles
 
 vec3 DirectLight(const Intersection &i, vector<Light> &lights);
 
+vec3 IndirectLight();
+
 vec3 SurfaceColour(const Intersection &i, vector<Light> &lights);
 
 void AddLight(vec3 pos, vec3 color, vector<Light> &lights);
@@ -162,6 +164,8 @@ void Draw(glm::vec3 &cameraPos, vector<Light> &lights) {
         SDL_LockSurface(screen);
 
 #pragma omp parallel for
+
+
     for (int y = 0; y < SCREEN_HEIGHT; y++) {
         for (int x = 0; x < SCREEN_WIDTH; x++) {
             int u = x - SCREEN_WIDTH / 2;
@@ -223,7 +227,12 @@ bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles
 }
 
 vec3 SurfaceColour(const Intersection &i, vector<Light> &lights) {
-    return triangles[i.triangleIndex].color * DirectLight(i, lights);
+    return triangles[i.triangleIndex].color * (DirectLight(i, lights) + IndirectLight());
+}
+
+vec3 IndirectLight()
+{
+	return 0.2f*vec3( 1, 1, 1 );
 }
 
 vec3 DirectLight(const Intersection &intersection, vector<Light> &lights) {
@@ -231,35 +240,21 @@ vec3 DirectLight(const Intersection &intersection, vector<Light> &lights) {
     glm::vec3 lightIntensity(0.0f, 0.0f, 0.0f);
 
     //Cast ray with all light sources and check if closest intersection is before the light
-    bool isInShadow = true;
-    Intersection shadowTestIntersection;
-    for (int i = 0; i < lights.size(); i++) {
-        vec3 intersectionPos = intersection.position;
-        vec3 shadowRay = lights[i].position - intersectionPos;
+    Intersection shadowRayIntersection;
 
-        bool isIntersection = ClosestIntersection(intersectionPos, shadowRay, triangles, shadowTestIntersection,
+    for (int i = 0; i < lights.size(); i++) {
+        vec3 shadowRay = lights[i].position - intersection.position;
+        bool isIntersection = ClosestIntersection(intersection.position, shadowRay, triangles, shadowRayIntersection,
                                                   intersection.triangleIndex);
-
-        vec3 intersectVec = intersection.position - shadowTestIntersection.position;
-
-        float lightDis = glm::length(shadowRay);
-        float intersectDis = glm::length(intersectVec); /// This
-
-        if (!isIntersection || intersectDis > lightDis) //This distance is somehow wrong?
+        vec3 intersectVec = intersection.position - shadowRayIntersection.position;
+        float r = glm::length(shadowRay);
+        float intersectDis = glm::length(intersectVec);
+        if(!isIntersection || intersectDis > r)
         {
-            isInShadow = false;
-            break;
+        	vec3 B = (lights[i].color / (float) (4 * r * r * M_PI));
+        	float dp = glm::dot(glm::normalize(triangles[intersection.triangleIndex].normal), glm::normalize(shadowRay));
+        	lightIntensity += B * glm::max(dp, 0.0f);
         }
-    }
-    if (isInShadow) return lightIntensity;
-
-
-    for (int i = 0; i < lights.size(); i++) {
-        vec3 lightdir = lights[i].position - intersection.position;
-        float r = glm::length(lightdir);
-        vec3 B = (lights[i].color / (float) (4 * r * r * M_PI));
-        float dp = glm::dot(glm::normalize(triangles[intersection.triangleIndex].normal), glm::normalize(lightdir));
-        lightIntensity += B * glm::max(dp, 0.0f);
     }
     return lightIntensity;
 }
