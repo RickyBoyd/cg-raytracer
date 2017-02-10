@@ -4,8 +4,17 @@
 #include "SDLauxiliary.h"
 #include "TestModel.h"
 #include <limits>
+#define _USE_MATH_DEFINES
 #include <math.h>
 //#include <omp.h>
+#ifndef unix
+extern "C" {
+	FILE __iob_func[3] = { stdin, stdout,*stderr };
+}
+extern "C" {
+	FILE __imp_fprintf[3] = { stdin, stdout,*stderr };
+}
+#endif
 
 using namespace std;
 using glm::vec3;

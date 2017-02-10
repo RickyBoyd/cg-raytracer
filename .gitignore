@@ -1,6 +1,11 @@
 cmake-build-debug/
 Build/
 .idea/
+.vs/
+Debug/
+x64/
+*.db
+*.opendb
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Linux template
