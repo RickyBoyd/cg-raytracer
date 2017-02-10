@@ -231,34 +231,37 @@ bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles
 	// Initialise the closest intersection to infinitely far away
 	closestIntersection.distance = std::numeric_limits<float>::max();
 
-	// Check each triangle for an intersection
+	// Check each triangle for an intersection using the Moller-Trumbore algorithm
 	// TODO: optimise this process using bounding boxes
 	for (int i = 0; i < triangles.size(); i++) {
 
-		// TODO: optimise this computation using Cramer's rule
+		if (i == currentTriangleIndex) continue;
+
 		Triangle triangle = triangles[i];
 		vec3 e1 = triangle.v1 - triangle.v0;
 		vec3 e2 = triangle.v2 - triangle.v0;
-		vec3 b = start - triangle.v0;
-		mat3 A(-dir, e1, e2);
-		vec3 x = inverse(A) * b;
+		vec3 pvec = glm::cross(dir, e2);
+		float det = glm::dot(e1, pvec);
 
-		// If there is an intersection with this triangle
-		if ((x.x >= 0) && (x.y >= 0) && (x.z >= 0) && (x.y + x.z <= 1))
-		{
-			// And if the intersection is closer
-			if (closestIntersection.distance > x.x) {
-				// Ignore intersections with the current triangle
-				if (i == currentTriangleIndex) continue;
+		if (abs(det) < 0.00000001) continue;
 
-				// Record the newly-found closest intersection
-				closestIntersection.position = start + x.x * dir;
-				closestIntersection.distance = x.x;
-				closestIntersection.triangleIndex = i;
-			}
+		float invDet = 1.0f / det;
 
+		vec3 tvec = start - triangle.v0;
+		float u = glm::dot(tvec, pvec) * invDet;
+		if (u < 0) continue;
+
+		vec3 qvec = glm::cross(tvec, e1);
+		float v = glm::dot(dir, qvec) * invDet;
+		if (v < 0 || u + v > 1) continue;
+
+		float t = glm::dot(e2, qvec) * invDet;
+
+		if (t < closestIntersection.distance) {
+			closestIntersection.position = triangle.v0 + u * e1 + v * e2;
+			closestIntersection.distance = t;
+			closestIntersection.triangleIndex = i;
 		}
-
 	}
 	return closestIntersection.distance != std::numeric_limits<float>::max();
 }
@@ -291,7 +294,7 @@ vec3 DirectLight(const Intersection &intersection, vector<Light> &lights, vec3 i
 		// If an intersection was found, and it is between the intersection and the light, this light does not reach the intersection
 		if (hasIntersection) {
 			float shadowRayIntersectionDistance = glm::length(intersection.position - shadowRayIntersection.position);
-			if (shadowRayIntersectionDistance <= lightDistance)
+			if (shadowRayIntersectionDistance < lightDistance - 0.00001)
 				continue;
 		}
 
