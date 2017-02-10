@@ -49,6 +49,8 @@ bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles
 
 vec3 DirectLight(const Intersection &i, vector<Light> &lights);
 
+vec3 IndirectLight();
+
 vec3 SurfaceColour(const Intersection &i, vector<Light> &lights);
 
 void AddLight(vec3 pos, vec3 color, vector<Light> &lights);
@@ -153,6 +155,8 @@ void Draw(glm::vec3 &cameraPos, vector<Light> &lights) {
         SDL_LockSurface(screen);
 
 #pragma omp parallel for
+
+
     for (int y = 0; y < SCREEN_HEIGHT; y++) {
         for (int x = 0; x < SCREEN_WIDTH; x++) {
             int u = x - SCREEN_WIDTH / 2;
@@ -214,7 +218,12 @@ bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles
 }
 
 vec3 SurfaceColour(const Intersection &i, vector<Light> &lights) {
-    return triangles[i.triangleIndex].color * DirectLight(i, lights);
+    return triangles[i.triangleIndex].color * (DirectLight(i, lights) + IndirectLight());
+}
+
+vec3 IndirectLight()
+{
+	return 0.2f*vec3( 1, 1, 1 );
 }
 
 vec3 DirectLight(const Intersection &intersection, vector<Light> &lights) {
