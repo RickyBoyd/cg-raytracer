@@ -233,8 +233,7 @@ bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles
 		vec3 e1 = triangle.v1 - triangle.v0;
 		vec3 e2 = triangle.v2 - triangle.v0;
 		vec3 b = start - triangle.v0;
-		vec3 unitDir = glm::normalize(dir);
-		mat3 A(-unitDir, e1, e2);
+		mat3 A(-dir, e1, e2);
 		vec3 x = inverse(A) * b;
 
 		// If there is an intersection with this triangle
