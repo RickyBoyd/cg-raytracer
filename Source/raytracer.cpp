@@ -1,5 +1,6 @@
 #include <iostream>
 #include <glm/glm.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 #include <SDL.h>
 #include "SDLauxiliary.h"
 #include "TestModel.h"
@@ -7,6 +8,8 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 //#include <omp.h>
+
+
 #ifndef unix
 extern "C" {
 	FILE __iob_func[3] = { stdin, stdout,*stderr };
@@ -45,13 +48,11 @@ const vec3 BLACK(0.0f, 0.0f, 0.0f);
 /* ----------------------------------------------------------------------------*/
 /* FUNCTIONS                                                                   */
 
-void Update(glm::vec3 &cameraPos, vector<Light> &lights, Uint8 *lightSelected);
+void Update(glm::vec3 &cameraPos, vector<Light> &lights, Uint8 *lightSelected, vec3 &pitchYawRoll);
 
-void Draw(glm::vec3 &cameraPos, vector<Light> &lights);
+void Draw(glm::vec3 &cameraPos, vec3 pitchYawRoll, vector<Light> &lights);
 
 void Interpolate(float a, float b, vector<float> &result);
-
-void Interpolate(vec3 a, vec3 b, vector<vec3> &result);
 
 bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles, Intersection &closestIntersection,
                          int currentTriangleIndex);
@@ -76,101 +77,127 @@ int main(int argc, char *argv[]) {
     cout << "Loaded " << triangles.size() << " tris" << endl;
 
     vec3 cameraPos(0.0f, 0.0f, -2.0f);
-    float yaw = 0.0f;
+    vec3 pitchYawRoll = vec3(0.0f, 0.0f, 0.0f);
 
     vector<Light> lights;
     AddLight(vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1, 1, 1), lights);
 
     while (NoQuitMessageSDL()) {
-        Draw(cameraPos, lights);
-        Update(cameraPos, lights, &lightSelected);
+        Draw(cameraPos, pitchYawRoll, lights);
+        Update(cameraPos, lights, &lightSelected, pitchYawRoll);
     }
 
     SDL_SaveBMP(screen, "screenshot.bmp");
     return 0;
 }
 
-void Update(glm::vec3 &cameraPos, vector<Light> &lights, Uint8 *lightSelected) {
-    // Compute frame time:
-    int t2 = SDL_GetTicks();
-    float dt = float(t2 - t);
-    t = t2;
-    cout << "Render time: " << dt << " ms." << endl;
+void Update(glm::vec3 &cameraPos, vector<Light> &lights, Uint8 *lightSelected, vec3 &pitchYawRoll) {
+	// Compute frame time:
+	int t2 = SDL_GetTicks();
+	float dt = float(t2 - t);
+	t = t2;
+	cout << "Render time: " << dt << " ms." << endl;
 
-    static float movementSpeed = 0.001;
+	static float movementSpeed = 0.001;
 
-    Uint8 *keystate = SDL_GetKeyState(0);
-    if (keystate[SDLK_UP]) {
-        cameraPos.y += dt * movementSpeed;
-    }
-    if (keystate[SDLK_DOWN]) {
-        cameraPos.y -= dt * movementSpeed;
-    }
-    if (keystate[SDLK_LEFT]) {
-        cameraPos.x -= dt * movementSpeed;
-    }
-    if (keystate[SDLK_RIGHT]) {
-        cameraPos.x += dt * movementSpeed;
-    }
-    if (keystate[SDLK_w]) {
-        lights[*lightSelected].position += vec3(0.0f, 0.0f, 0.1f);
-    }
-    if (keystate[SDLK_s]) {
-        lights[*lightSelected].position += vec3(0.0f, 0.0f, -0.1f);
-    }
-    if (keystate[SDLK_a]) {
-        lights[*lightSelected].position += vec3(-0.1f, 0.0f, 0.0f);
-    }
-    if (keystate[SDLK_d]) {
-        lights[*lightSelected].position += vec3(0.1f, 0.0f, 0.0f);
-    }
-    if (keystate[SDLK_q]) {
-        lights[*lightSelected].position += vec3(0.0f, 0.1f, 0.0f);
-    }
-    if (keystate[SDLK_e]) {
-        lights[*lightSelected].position += vec3(0.0f, -0.1f, 0.0f);
-    }
-    if (keystate[SDLK_n]) {
-        if (lights.size() < 6) {
-            AddLight(vec3(0.0f, 0.0f, 0.0f), 10.0f * vec3(1.0f, 1.0f, 1.0f), lights);
-            *lightSelected = (Uint8) lights.size() - 1;
-        }
-    }
-    if (keystate[SDLK_1] && lights.size() > 0) {
-        *lightSelected = 0;
-    }
-    if (keystate[SDLK_2] && lights.size() > 1) {
-        *lightSelected = 1;
-    }
-    if (keystate[SDLK_3] && lights.size() > 2) {
-        *lightSelected = 2;
-    }
-    if (keystate[SDLK_4] && lights.size() > 3) {
-        *lightSelected = 3;
-    }
-    if (keystate[SDLK_5] && lights.size() > 4) {
-        *lightSelected = 4;
-    }
-    if (keystate[SDLK_6] && lights.size() > 5) {
-        *lightSelected = 5;
-    }
+	Uint8 *keystate = SDL_GetKeyState(nullptr);
+	if (keystate[SDLK_UP]) {
+		cameraPos.y += dt * movementSpeed;
+	}
+	if (keystate[SDLK_DOWN]) {
+		cameraPos.y -= dt * movementSpeed;
+	}
+	if (keystate[SDLK_LEFT]) {
+		cameraPos.x -= dt * movementSpeed;
+	}
+	if (keystate[SDLK_RIGHT]) {
+		cameraPos.x += dt * movementSpeed;
+	}
+	if (keystate[SDLK_w]) {
+		lights[*lightSelected].position += vec3(0.0f, 0.0f, 0.1f);
+	}
+	if (keystate[SDLK_s]) {
+		lights[*lightSelected].position += vec3(0.0f, 0.0f, -0.1f);
+	}
+	if (keystate[SDLK_a]) {
+		lights[*lightSelected].position += vec3(-0.1f, 0.0f, 0.0f);
+	}
+	if (keystate[SDLK_d]) {
+		lights[*lightSelected].position += vec3(0.1f, 0.0f, 0.0f);
+	}
+	if (keystate[SDLK_q]) {
+		lights[*lightSelected].position += vec3(0.0f, 0.1f, 0.0f);
+	}
+	if (keystate[SDLK_e]) {
+		lights[*lightSelected].position += vec3(0.0f, -0.1f, 0.0f);
+	}
+	if (keystate[SDLK_n]) {
+		if (lights.size() < 6) {
+			AddLight(vec3(0.0f, 0.0f, 0.0f), 10.0f * vec3(1.0f, 1.0f, 1.0f), lights);
+			*lightSelected = (Uint8)lights.size() - 1;
+		}
+	}
+	if (keystate[SDLK_1] && lights.size() > 0) {
+		*lightSelected = 0;
+	}
+	if (keystate[SDLK_2] && lights.size() > 1) {
+		*lightSelected = 1;
+	}
+	if (keystate[SDLK_3] && lights.size() > 2) {
+		*lightSelected = 2;
+	}
+	if (keystate[SDLK_4] && lights.size() > 3) {
+		*lightSelected = 3;
+	}
+	if (keystate[SDLK_5] && lights.size() > 4) {
+		*lightSelected = 4;
+	}
+	if (keystate[SDLK_6] && lights.size() > 5) {
+		*lightSelected = 5;
+	}
+
+	if (keystate[SDLK_j])
+	{
+		pitchYawRoll.y -= dt * 0.01f;
+	}
+	if (keystate[SDLK_l])
+	{
+		pitchYawRoll.y += dt * 0.01f;
+	}
+	if (keystate[SDLK_i])
+	{
+		pitchYawRoll.x += dt * 0.01f;
+	}
+	if (keystate[SDLK_k])
+	{
+		pitchYawRoll.x -= dt * 0.01f;
+	}
+	if (keystate[SDLK_u])
+	{
+		pitchYawRoll.z -= dt * 0.01f;
+	}
+	if (keystate[SDLK_o])
+	{
+		pitchYawRoll.z += dt * 0.01f;
+	}
 
 }
 
-void Draw(glm::vec3 &cameraPos, vector<Light> &lights) {
+void Draw(glm::vec3 &cameraPos, vec3 pitchYawRoll, vector<Light> &lights) {
     //SDL_FillRect( screen, 0, 0 );
 
     if (SDL_MUSTLOCK(screen))
         SDL_LockSurface(screen);
 
 #pragma omp parallel for
-
-
     for (int y = 0; y < SCREEN_HEIGHT; y++) {
         for (int x = 0; x < SCREEN_WIDTH; x++) {
             int u = x - SCREEN_WIDTH / 2;
             int v = (SCREEN_HEIGHT - y) - SCREEN_HEIGHT / 2;
             vec3 d(u, v, f);
+			d = glm::rotate(d, glm::radians(pitchYawRoll.x), vec3(1.0f, 0.0f, 0.0f));
+			d = glm::rotate(d, glm::radians(pitchYawRoll.y), vec3(0.0f, 1.0f, 0.0f));
+			d = glm::rotate(d, glm::radians(pitchYawRoll.z), vec3(0.0f, 0.0f, 1.0f));
             Intersection maybeIntersection;
             bool hasIntersection = ClosestIntersection(cameraPos, d, triangles, maybeIntersection, triangles.size());
             if (hasIntersection) {
