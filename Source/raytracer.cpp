@@ -191,15 +191,22 @@ void Draw(glm::vec3 &cameraPos, vec3 pitchYawRoll, vector<Light> &lights) {
 	if (SDL_MUSTLOCK(screen))
 		SDL_LockSurface(screen);
 
+	// Paint every pixel on the screen
 #pragma omp parallel for
 	for (int y = 0; y < SCREEN_HEIGHT; y++) {
 		for (int x = 0; x < SCREEN_WIDTH; x++) {
+
+			// Compute the corresponding camera-space co-ordinates (u,v,f) for this point on the screen
 			int u = x - SCREEN_WIDTH / 2;
 			int v = (SCREEN_HEIGHT - y) - SCREEN_HEIGHT / 2;
 			vec3 d(u, v, f);
+
+			// Rotate the direction of the camera->screen ray according to the current pitch, roll and yaw
 			d = glm::rotate(d, glm::radians(pitchYawRoll.x), vec3(1.0f, 0.0f, 0.0f));
 			d = glm::rotate(d, glm::radians(pitchYawRoll.y), vec3(0.0f, 1.0f, 0.0f));
 			d = glm::rotate(d, glm::radians(pitchYawRoll.z), vec3(0.0f, 0.0f, 1.0f));
+
+			// Find an intersection of this ray with the model, if exists
 			Intersection maybeIntersection;
 			bool hasIntersection = ClosestIntersection(cameraPos, d, triangles, triangles.size(), maybeIntersection);
 			if (hasIntersection) {
@@ -207,7 +214,6 @@ void Draw(glm::vec3 &cameraPos, vec3 pitchYawRoll, vector<Light> &lights) {
 				PutPixelSDL(screen, x, y, color);
 			}
 			else {
-				//cout << " NO intersection at (" << x <<"," << y << ")" << endl;
 				PutPixelSDL(screen, x, y, BLACK);
 			}
 		}
@@ -265,25 +271,31 @@ vec3 IndirectLight()
 	return 0.2f*vec3(1, 1, 1);
 }
 
+// Compute the light intensity at an intersection resulting from direct light
 vec3 DirectLight(const Intersection &intersection, vector<Light> &lights) {
+	// Sum the light intensity over all lights in the scene
 	glm::vec3 lightIntensity(0.0f, 0.0f, 0.0f);
+	for (auto light : lights) {
+		
+		// Determine whether the shadow ray (intersection->light) intersects with another triangle
+		vec3 shadowRay = light.position - intersection.position;
+		float lightDistance = glm::length(shadowRay);
+		Intersection shadowRayIntersection;
+		bool hasIntersection = ClosestIntersection(intersection.position, shadowRay, triangles, intersection.triangleIndex, shadowRayIntersection);
 
-	//Cast ray with all light sources and check if closest intersection is before the light
-	Intersection shadowRayIntersection;
-
-	for (int i = 0; i < lights.size(); i++) {
-		vec3 shadowRay = lights[i].position - intersection.position;
-		bool isIntersection = ClosestIntersection(intersection.position, shadowRay, triangles, intersection.triangleIndex,
-		                                          shadowRayIntersection);
-		vec3 intersectVec = intersection.position - shadowRayIntersection.position;
-		float r = glm::length(shadowRay);
-		float intersectDis = glm::length(intersectVec);
-		if (!isIntersection || intersectDis > r)
-		{
-			vec3 B = (lights[i].color / (float)(4 * r * r * M_PI));
-			float dp = glm::dot(glm::normalize(triangles[intersection.triangleIndex].normal), glm::normalize(shadowRay));
-			lightIntensity += B * glm::max(dp, 0.0f);
+		// If an intersection was found, and it is between the intersection and the light, this light does not reach the intersection
+		if (hasIntersection) {
+			float shadowRayIntersectionDistance = glm::length(intersection.position - shadowRayIntersection.position);
+			if (shadowRayIntersectionDistance <= lightDistance)
+				continue;
 		}
+
+		// Otherwise, compute the light's power per unit area at the intersection
+		vec3 B = (light.color / static_cast<float>(4 * lightDistance * lightDistance * M_PI));
+		// Compute a normalising factor based on the angle between the shadow ray and the surface normal
+		float dp = glm::dot(glm::normalize(triangles[intersection.triangleIndex].normal), glm::normalize(shadowRay));
+
+		lightIntensity += B * glm::max(dp, 0.0f);
 	}
 	return lightIntensity;
 }
