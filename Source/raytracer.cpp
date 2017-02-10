@@ -7,6 +7,8 @@
 #include <limits>
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <glm/detail/type_mat.hpp>
+#include <glm/detail/type_mat.hpp>
 //#include <omp.h>
 
 
@@ -54,8 +56,8 @@ void Draw(glm::vec3 &cameraPos, vec3 pitchYawRoll, vector<Light> &lights);
 
 void Interpolate(float a, float b, vector<float> &result);
 
-bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles, Intersection &closestIntersection,
-	int currentTriangleIndex);
+bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles, int currentTriangleIndex,
+                         Intersection &closestIntersection);
 
 vec3 DirectLight(const Intersection &i, vector<Light> &lights);
 
@@ -199,7 +201,7 @@ void Draw(glm::vec3 &cameraPos, vec3 pitchYawRoll, vector<Light> &lights) {
 			d = glm::rotate(d, glm::radians(pitchYawRoll.y), vec3(0.0f, 1.0f, 0.0f));
 			d = glm::rotate(d, glm::radians(pitchYawRoll.z), vec3(0.0f, 0.0f, 1.0f));
 			Intersection maybeIntersection;
-			bool hasIntersection = ClosestIntersection(cameraPos, d, triangles, maybeIntersection, triangles.size());
+			bool hasIntersection = ClosestIntersection(cameraPos, d, triangles, triangles.size(), maybeIntersection);
 			if (hasIntersection) {
 				vec3 color = SurfaceColour(maybeIntersection, lights);
 				PutPixelSDL(screen, x, y, color);
@@ -217,26 +219,33 @@ void Draw(glm::vec3 &cameraPos, vec3 pitchYawRoll, vector<Light> &lights) {
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
 
-bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles, Intersection &closestIntersection,
-	int currentTriangleIndex) {
+/// <summary>Find the triangle intersected first by the ray from start in direction dir.</summary>
+bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles, int currentTriangleIndex, Intersection &closestIntersection) {
+	// Initialise the closest intersection to infinitely far away
 	closestIntersection.distance = std::numeric_limits<float>::max();
-	for (int i = 0; i < triangles.size(); i++) {
-		Triangle triangle = triangles[i];
-		vec3 v0 = triangle.v0;
-		vec3 v1 = triangle.v1;
-		vec3 v2 = triangle.v2;
-		vec3 e1 = v1 - v0;
-		vec3 e2 = v2 - v0;
-		vec3 b = start - v0;
-		mat3 A(-dir, e1, e2);
-		vec3 x = glm::inverse(A) * b;
 
-		if ((x.x >= 0) && (x.y >= 0) && (x.z >= 0) && (x.y + x.z <= 1)) //Intersection!
+	// Check each triangle for an intersection
+	// TODO: optimise this process using bounding boxes
+	for (int i = 0; i < triangles.size(); i++) {
+
+		// TODO: optimise this computation using Cramer's rule
+		Triangle triangle = triangles[i];
+		vec3 e1 = triangle.v1 - triangle.v0;
+		vec3 e2 = triangle.v2 - triangle.v0;
+		vec3 b = start - triangle.v0;
+		vec3 unitDir = glm::normalize(dir);
+		mat3 A(-unitDir, e1, e2);
+		vec3 x = inverse(A) * b;
+
+		// If there is an intersection with this triangle
+		if ((x.x >= 0) && (x.y >= 0) && (x.z >= 0) && (x.y + x.z <= 1))
 		{
-			//vec3 r = start + dir * x.x;
-			//float r_dis = glm::length(r);
+			// And if the intersection is closer
 			if (closestIntersection.distance > x.x) {
+				// Ignore intersections with the current triangle
 				if (i == currentTriangleIndex) continue;
+
+				// Record the newly-found closest intersection
 				closestIntersection.position = start + x.x * dir;
 				closestIntersection.distance = x.x;
 				closestIntersection.triangleIndex = i;
@@ -258,7 +267,6 @@ vec3 IndirectLight()
 }
 
 vec3 DirectLight(const Intersection &intersection, vector<Light> &lights) {
-	//need to sum over all lights
 	glm::vec3 lightIntensity(0.0f, 0.0f, 0.0f);
 
 	//Cast ray with all light sources and check if closest intersection is before the light
@@ -266,8 +274,8 @@ vec3 DirectLight(const Intersection &intersection, vector<Light> &lights) {
 
 	for (int i = 0; i < lights.size(); i++) {
 		vec3 shadowRay = lights[i].position - intersection.position;
-		bool isIntersection = ClosestIntersection(intersection.position, shadowRay, triangles, shadowRayIntersection,
-			intersection.triangleIndex);
+		bool isIntersection = ClosestIntersection(intersection.position, shadowRay, triangles, intersection.triangleIndex,
+		                                          shadowRayIntersection);
 		vec3 intersectVec = intersection.position - shadowRayIntersection.position;
 		float r = glm::length(shadowRay);
 		float intersectDis = glm::length(intersectVec);
