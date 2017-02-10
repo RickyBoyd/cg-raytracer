@@ -18,8 +18,8 @@ struct Intersection {
 };
 
 struct Light {
-	vec3 position;
-	vec3 color;
+    vec3 position;
+    vec3 color;
 };
 
 /* ----------------------------------------------------------------------------*/
@@ -36,19 +36,20 @@ const vec3 BLACK(0.0f, 0.0f, 0.0f);
 /* ----------------------------------------------------------------------------*/
 /* FUNCTIONS                                                                   */
 
-void Update(glm::vec3 &cameraPos, vector<Light>& lights, Uint8 *lightSelected);
+void Update(glm::vec3 &cameraPos, vector<Light> &lights, Uint8 *lightSelected);
 
-void Draw(glm::vec3 &cameraPos, vector<Light>& lights);
+void Draw(glm::vec3 &cameraPos, vector<Light> &lights);
 
 void Interpolate(float a, float b, vector<float> &result);
 
 void Interpolate(vec3 a, vec3 b, vector<vec3> &result);
 
-bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles, Intersection &closestIntersection, int currentTriangleIndex);
+bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles, Intersection &closestIntersection,
+                         int currentTriangleIndex);
 
-vec3 DirectLight(const Intersection &i, vector<Light>& lights);
+vec3 DirectLight(const Intersection &i, vector<Light> &lights);
 
-vec3 SurfaceColour(const Intersection &i, vector<Light>& lights);
+vec3 SurfaceColour(const Intersection &i, vector<Light> &lights);
 
 void AddLight(vec3 pos, vec3 color, vector<Light> &lights);
 
@@ -57,7 +58,7 @@ int main(int argc, char *argv[]) {
     screen = InitializeSDL(SCREEN_WIDTH, SCREEN_HEIGHT);
     t = SDL_GetTicks();    // Set start value for timer.
 
-   // cout << "OMP Max Threads: " << omp_get_max_threads() << endl;
+    // cout << "OMP Max Threads: " << omp_get_max_threads() << endl;
     Uint8 lightSelected = 0;
 
     LoadTestModel(triangles);
@@ -67,7 +68,7 @@ int main(int argc, char *argv[]) {
     float yaw = 0.0f;
 
     vector<Light> lights;
-    AddLight( vec3(-0.3f, 0.5f, -0.7f) ,15.0f * vec3(1, 1, 1), lights);
+    AddLight(vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1, 1, 1), lights);
 
     while (NoQuitMessageSDL()) {
         Draw(cameraPos, lights);
@@ -78,7 +79,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-void Update(glm::vec3 &cameraPos, vector<Light>& lights, Uint8* lightSelected) {
+void Update(glm::vec3 &cameraPos, vector<Light> &lights, Uint8 *lightSelected) {
     // Compute frame time:
     int t2 = SDL_GetTicks();
     float dt = float(t2 - t);
@@ -87,7 +88,7 @@ void Update(glm::vec3 &cameraPos, vector<Light>& lights, Uint8* lightSelected) {
 
     static float movementSpeed = 0.001;
 
-    Uint8* keystate = SDL_GetKeyState(0);
+    Uint8 *keystate = SDL_GetKeyState(0);
     if (keystate[SDLK_UP]) {
         cameraPos.y += dt * movementSpeed;
     }
@@ -119,10 +120,10 @@ void Update(glm::vec3 &cameraPos, vector<Light>& lights, Uint8* lightSelected) {
         lights[*lightSelected].position += vec3(0.0f, -0.1f, 0.0f);
     }
     if (keystate[SDLK_n]) {
-    	if(lights.size() < 6){
-    		AddLight(vec3(0.0f, 0.0f, 0.0f), 10.0f*vec3(1.0f, 1.0f, 1.0f), lights);
-    		*lightSelected = (Uint8)lights.size() - 1;
-    	}
+        if (lights.size() < 6) {
+            AddLight(vec3(0.0f, 0.0f, 0.0f), 10.0f * vec3(1.0f, 1.0f, 1.0f), lights);
+            *lightSelected = (Uint8) lights.size() - 1;
+        }
     }
     if (keystate[SDLK_1] && lights.size() > 0) {
         *lightSelected = 0;
@@ -140,12 +141,12 @@ void Update(glm::vec3 &cameraPos, vector<Light>& lights, Uint8* lightSelected) {
         *lightSelected = 4;
     }
     if (keystate[SDLK_6] && lights.size() > 5) {
-    	*lightSelected = 5;
+        *lightSelected = 5;
     }
 
 }
 
-void Draw(glm::vec3 &cameraPos, vector<Light>& lights) {
+void Draw(glm::vec3 &cameraPos, vector<Light> &lights) {
     //SDL_FillRect( screen, 0, 0 );
 
     if (SDL_MUSTLOCK(screen))
@@ -155,7 +156,7 @@ void Draw(glm::vec3 &cameraPos, vector<Light>& lights) {
     for (int y = 0; y < SCREEN_HEIGHT; y++) {
         for (int x = 0; x < SCREEN_WIDTH; x++) {
             int u = x - SCREEN_WIDTH / 2;
-            int v = (SCREEN_HEIGHT - y)  - SCREEN_HEIGHT / 2;
+            int v = (SCREEN_HEIGHT - y) - SCREEN_HEIGHT / 2;
             vec3 d(u, v, f);
             Intersection maybeIntersection;
             bool hasIntersection = ClosestIntersection(cameraPos, d, triangles, maybeIntersection, triangles.size());
@@ -181,7 +182,8 @@ void Draw(glm::vec3 &cameraPos, vector<Light>& lights) {
 // 	return pos;
 // }
 
-bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles, Intersection &closestIntersection, int currentTriangleIndex) {
+bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles, Intersection &closestIntersection,
+                         int currentTriangleIndex) {
     closestIntersection.distance = std::numeric_limits<float>::max();
     for (int i = 0; i < triangles.size(); i++) {
         Triangle triangle = triangles[i];
@@ -199,7 +201,7 @@ bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles
             //vec3 r = start + dir * x.x;
             //float r_dis = glm::length(r);
             if (closestIntersection.distance > x.x) {
-            	if (i ==currentTriangleIndex) continue;
+                if (i == currentTriangleIndex) continue;
                 closestIntersection.position = start + x.x * dir;
                 closestIntersection.distance = x.x;
                 closestIntersection.triangleIndex = i;
@@ -215,41 +217,41 @@ vec3 SurfaceColour(const Intersection &i, vector<Light> &lights) {
     return triangles[i.triangleIndex].color * DirectLight(i, lights);
 }
 
-vec3 DirectLight(const Intersection &intersection, vector<Light>& lights) {
-	//need to sum over all lights
-	glm::vec3 lightIntensity(0.0f, 0.0f, 0.0f);
+vec3 DirectLight(const Intersection &intersection, vector<Light> &lights) {
+    //need to sum over all lights
+    glm::vec3 lightIntensity(0.0f, 0.0f, 0.0f);
 
-	//Cast ray with all light sources and check if closest intersection is before the light
-	bool isInShadow = true;
-	Intersection shadowTestIntersection;
-	for(int i = 0; i < lights.size(); i++)
-	{
-		vec3 intersectionPos = intersection.position;
-		vec3 shadowRay = lights[i].position - intersectionPos;
+    //Cast ray with all light sources and check if closest intersection is before the light
+    bool isInShadow = true;
+    Intersection shadowTestIntersection;
+    for (int i = 0; i < lights.size(); i++) {
+        vec3 intersectionPos = intersection.position;
+        vec3 shadowRay = lights[i].position - intersectionPos;
 
-		bool isIntersection = ClosestIntersection(intersectionPos, shadowRay, triangles, shadowTestIntersection, intersection.triangleIndex);
+        bool isIntersection = ClosestIntersection(intersectionPos, shadowRay, triangles, shadowTestIntersection,
+                                                  intersection.triangleIndex);
 
-		vec3 intersectVec = intersection.position - shadowTestIntersection.position;
+        vec3 intersectVec = intersection.position - shadowTestIntersection.position;
 
-		float lightDis = glm::length(shadowRay);
-		float intersectDis = glm::length(intersectVec); /// This
+        float lightDis = glm::length(shadowRay);
+        float intersectDis = glm::length(intersectVec); /// This
 
-		if( !isIntersection || intersectDis > lightDis ) //This distance is somehow wrong?
-		{
-			isInShadow = false;
-			break;
-		}
-	}
-	if(isInShadow) return lightIntensity;
+        if (!isIntersection || intersectDis > lightDis) //This distance is somehow wrong?
+        {
+            isInShadow = false;
+            break;
+        }
+    }
+    if (isInShadow) return lightIntensity;
 
 
-	for(int i = 0; i < lights.size(); i++){
-    	vec3 lightdir = lights[i].position - intersection.position;
-    	float r = glm::length(lightdir);
-    	vec3 B = (lights[i].color / (float) (4 * r * r * M_PI));
-    	float dp = glm::dot(glm::normalize(triangles[intersection.triangleIndex].normal), glm::normalize(lightdir));
-    	lightIntensity += B * glm::max(dp, 0.0f);
-	}
+    for (int i = 0; i < lights.size(); i++) {
+        vec3 lightdir = lights[i].position - intersection.position;
+        float r = glm::length(lightdir);
+        vec3 B = (lights[i].color / (float) (4 * r * r * M_PI));
+        float dp = glm::dot(glm::normalize(triangles[intersection.triangleIndex].normal), glm::normalize(lightdir));
+        lightIntensity += B * glm::max(dp, 0.0f);
+    }
     return lightIntensity;
 }
 
@@ -269,8 +271,7 @@ void Interpolate(float a, float b, vector<float> &result) {
     }
 }
 
-void AddLight(vec3 pos, vec3 color, vector<Light> &lights)
-{
-	Light light = {pos, color};
-	lights.push_back(light);
+void AddLight(vec3 pos, vec3 color, vector<Light> &lights) {
+    Light light = {pos, color};
+    lights.push_back(light);
 }
