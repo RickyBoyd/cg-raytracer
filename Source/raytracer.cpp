@@ -98,7 +98,7 @@ void Update(glm::vec3 &cameraPos, vector<Light> &lights, Uint8 *lightSelected, v
 	int t2 = SDL_GetTicks();
 	float dt = float(t2 - t);
 	t = t2;
-	cout << "Render time: " << dt << " ms." << endl;
+	cout << "Render time: " << dt << " ms.\n";
 
 	static float movementSpeed = 0.001;
 	static float rotateSpeed = 0.01;
@@ -243,7 +243,7 @@ bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles
 		vec3 pvec = glm::cross(dir, e2);
 		float det = glm::dot(e1, pvec);
 
-		if (abs(det) < 0.00000001) continue;
+		if (fabs(det) < 0.000000000001) continue;
 
 		float invDet = 1.0f / det;
 
@@ -257,7 +257,7 @@ bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles
 
 		float t = glm::dot(e2, qvec) * invDet;
 
-		if (t < closestIntersection.distance) {
+		if (t > 0 && t < closestIntersection.distance) {
 			closestIntersection.position = triangle.v0 + u * e1 + v * e2;
 			closestIntersection.distance = t;
 			closestIntersection.triangleIndex = i;
@@ -279,12 +279,10 @@ vec3 IndirectLight()
 vec3 DirectLight(const Intersection &intersection, vector<Light> &lights, vec3 incidentRay) {
 	float Kdiffuse = 0.8f;
 	float Kspecular = 0.5f;
-
-	// Sum the light intensity over all lights in the scene
-	glm::vec3 diffuseIntensity(0.0f, 0.0f, 0.0f);
+	glm::vec3 lightIntensity(0.0f, 0.0f, 0.0f);
 	glm::vec3 specularIntensity(0.0f, 0.0f, 0.0f);
 	for (auto light : lights) {
-		
+
 		// Determine whether the shadow ray (intersection->light) intersects with another triangle
 		vec3 shadowRay = light.position - intersection.position;
 		float lightDistance = glm::length(shadowRay);
@@ -294,7 +292,7 @@ vec3 DirectLight(const Intersection &intersection, vector<Light> &lights, vec3 i
 		// If an intersection was found, and it is between the intersection and the light, this light does not reach the intersection
 		if (hasIntersection) {
 			float shadowRayIntersectionDistance = glm::length(intersection.position - shadowRayIntersection.position);
-			if (shadowRayIntersectionDistance < lightDistance - 0.00001)
+			if (shadowRayIntersectionDistance <= lightDistance)
 				continue;
 		}
 
@@ -302,15 +300,15 @@ vec3 DirectLight(const Intersection &intersection, vector<Light> &lights, vec3 i
 		vec3 B = (light.color / static_cast<float>(4 * lightDistance * lightDistance * M_PI));
 		// Compute a normalising factor based on the angle between the shadow ray and the surface normal
 		float dp = glm::dot(glm::normalize(triangles[intersection.triangleIndex].normal), glm::normalize(shadowRay));
-
-		diffuseIntensity += B * glm::max(dp, 0.0f);
+		lightIntensity += B * glm::max(dp, 0.0f);
 
 		// Compute direction of 'ideal' reflection from light source
 		vec3 idealReflection = glm::normalize(glm::reflect(shadowRay, triangles[intersection.triangleIndex].normal));
 		// Project actual incident ray onto reflection and use Phong to calculate specular intensity
 		specularIntensity += B * std::pow(std::max(0.0f, glm::dot(idealReflection, glm::normalize(incidentRay))), 100);
+
 	}
-	return diffuseIntensity * Kdiffuse + specularIntensity * Kspecular;
+	return lightIntensity * Kdiffuse + specularIntensity * Kspecular;
 }
 
 
