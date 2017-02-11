@@ -98,7 +98,7 @@ void Update(glm::vec3 &cameraPos, vector<Light> &lights, Uint8 *lightSelected, v
 	int t2 = SDL_GetTicks();
 	float dt = float(t2 - t);
 	t = t2;
-	cout << "Render time: " << dt << " ms." << endl;
+	cout << "Render time: " << dt << " ms.\n";
 
 	static float movementSpeed = 0.001;
 	static float rotateSpeed = 0.01;
@@ -243,7 +243,7 @@ bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles
 		vec3 pvec = glm::cross(dir, e2);
 		float det = glm::dot(e1, pvec);
 
-		if (abs(det) < 0.00000001) continue;
+		if (fabs(det) < 0.000000000001) continue;
 
 		float invDet = 1.0f / det;
 
@@ -257,9 +257,9 @@ bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles
 
 		float t = glm::dot(e2, qvec) * invDet;
 
-		if (t < closestIntersection.distance) {
+		if (t * glm::length(dir) < closestIntersection.distance) {
 			closestIntersection.position = triangle.v0 + u * e1 + v * e2;
-			closestIntersection.distance = t;
+			closestIntersection.distance = glm::length(closestIntersection.position - start);
 			closestIntersection.triangleIndex = i;
 		}
 	}
@@ -292,10 +292,8 @@ vec3 DirectLight(const Intersection &intersection, vector<Light> &lights, vec3 i
 		bool hasIntersection = ClosestIntersection(intersection.position, shadowRay, triangles, intersection.triangleIndex, shadowRayIntersection);
 
 		// If an intersection was found, and it is between the intersection and the light, this light does not reach the intersection
-		if (hasIntersection) {
-			float shadowRayIntersectionDistance = glm::length(intersection.position - shadowRayIntersection.position);
-			if (shadowRayIntersectionDistance < lightDistance - 0.00001)
-				continue;
+		if (hasIntersection && shadowRayIntersection.distance < lightDistance) {
+			continue;
 		}
 
 		// Otherwise, compute the light's power per unit area at the intersection
