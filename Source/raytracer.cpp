@@ -257,9 +257,9 @@ bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles
 
 		float t = glm::dot(e2, qvec) * invDet;
 
-		if (t * glm::length(dir) < closestIntersection.distance) {
+		if (t < closestIntersection.distance) {
 			closestIntersection.position = triangle.v0 + u * e1 + v * e2;
-			closestIntersection.distance = glm::length(closestIntersection.position - start);
+			closestIntersection.distance = t;
 			closestIntersection.triangleIndex = i;
 		}
 	}
