@@ -42,11 +42,12 @@ struct Light {
 
 const int SCREEN_WIDTH = 500;
 const int SCREEN_HEIGHT = 500;
+const int AA_SAMPLES = 4;
+const glm::vec2 JITTER_MATRIX[AA_SAMPLES] = { glm::vec2(-0.25, 0.75), glm::vec2(0.75, 0.25), glm::vec2(-0.75, -0.25), glm::vec2(0.25, -0.75) };
 SDL_Surface *screen;
 int t;
 vector<Triangle> triangles;
-float f = SCREEN_WIDTH / 2;
-const vec3 BLACK(0.0f, 0.0f, 0.0f);
+const float FOCAL_LENGTH = SCREEN_WIDTH / 2;
 
 /* ----------------------------------------------------------------------------*/
 /* FUNCTIONS                                                                   */
@@ -197,26 +198,29 @@ void Draw(glm::vec3 &cameraPos, vec3 pitchYawRoll, vector<Light> &lights) {
 	for (int y = 0; y < SCREEN_HEIGHT; y++) {
 		for (int x = 0; x < SCREEN_WIDTH; x++) {
 
-			// Compute the corresponding camera-space co-ordinates (u,v,f) for this point on the screen
-			int u = x - SCREEN_WIDTH / 2;
-			int v = (SCREEN_HEIGHT - y) - SCREEN_HEIGHT / 2;
-			vec3 d(u, v, f);
+			vec3 colour(0.0f, 0.0f, 0.0f);
 
-			// Rotate the direction of the camera->screen ray according to the current pitch, roll and yaw
-			d = glm::rotate(d, glm::radians(pitchYawRoll.x), vec3(1.0f, 0.0f, 0.0f));
-			d = glm::rotate(d, glm::radians(pitchYawRoll.y), vec3(0.0f, 1.0f, 0.0f));
-			d = glm::rotate(d, glm::radians(pitchYawRoll.z), vec3(0.0f, 0.0f, 1.0f));
+			for (int sample = 0; sample < AA_SAMPLES; sample++) {
+				// Compute the corresponding camera-space co-ordinates (u,v,f) for this point on the screen
+				float u = x - SCREEN_WIDTH / 2 + JITTER_MATRIX[sample].x;
+				float v = (SCREEN_HEIGHT - y) - SCREEN_HEIGHT / 2 + JITTER_MATRIX[sample].y;
+				vec3 d(u, v, FOCAL_LENGTH);
 
-			// Find an intersection of this ray with the model, if exists
-			Intersection maybeIntersection;
-			bool hasIntersection = ClosestIntersection(cameraPos, d, triangles, triangles.size(), maybeIntersection);
-			if (hasIntersection) {
-				vec3 color = SurfaceColour(maybeIntersection, lights, d);
-				PutPixelSDL(screen, x, y, color);
+				// Rotate the direction of the camera->screen ray according to the current pitch, roll and yaw
+				d = glm::rotate(d, glm::radians(pitchYawRoll.x), vec3(1.0f, 0.0f, 0.0f));
+				d = glm::rotate(d, glm::radians(pitchYawRoll.y), vec3(0.0f, 1.0f, 0.0f));
+				d = glm::rotate(d, glm::radians(pitchYawRoll.z), vec3(0.0f, 0.0f, 1.0f));
+
+
+				// Find an intersection of this ray with the model, if exists
+				Intersection maybeIntersection;
+				bool hasIntersection = ClosestIntersection(cameraPos, d, triangles, triangles.size(), maybeIntersection);
+				if (hasIntersection) {
+					colour += SurfaceColour(maybeIntersection, lights, d);
+				}
 			}
-			else {
-				PutPixelSDL(screen, x, y, BLACK);
-			}
+
+			PutPixelSDL(screen, x, y, colour / float(AA_SAMPLES));
 		}
 	}
 
