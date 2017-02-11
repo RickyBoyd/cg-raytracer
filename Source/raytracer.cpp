@@ -12,6 +12,8 @@
 #include <algorithm>
 //#include <omp.h>
 
+#define EDGE_AA
+
 
 #ifndef unix
 extern "C" {
@@ -200,6 +202,11 @@ void Draw(glm::vec3 &cameraPos, vec3 pitchYawRoll, vector<Light> &lights) {
 
 			vec3 colour(0.0f, 0.0f, 0.0f);
 
+			// Record the indices of the triangles at each sample point. If we hit the same triangle twice we can re-use the surface colour
+			int sampleTriangleIndices[AA_SAMPLES];
+			std::fill(std::begin(sampleTriangleIndices), std::end(sampleTriangleIndices), -1);
+			vec3 sampleTriangleColours[AA_SAMPLES];
+
 			for (int sample = 0; sample < AA_SAMPLES; sample++) {
 				// Compute the corresponding camera-space co-ordinates (u,v,f) for this point on the screen
 				float u = x - SCREEN_WIDTH / 2 + JITTER_MATRIX[sample].x;
@@ -215,11 +222,35 @@ void Draw(glm::vec3 &cameraPos, vec3 pitchYawRoll, vector<Light> &lights) {
 				// Find an intersection of this ray with the model, if exists
 				Intersection maybeIntersection;
 				bool hasIntersection = ClosestIntersection(cameraPos, d, triangles, triangles.size(), maybeIntersection);
+
+#ifdef EDGE_AA
+				if (hasIntersection) {
+					bool alreadySampled = false;
+					for (int i = 0; i < AA_SAMPLES; i++)
+					{
+						if (sampleTriangleIndices[i] == maybeIntersection.triangleIndex)
+						{
+							colour += sampleTriangleColours[i];
+							alreadySampled = true;
+							break;
+						}
+					}
+
+					if (!alreadySampled)
+					{
+						vec3 triangleColour = SurfaceColour(maybeIntersection, lights, d);
+						colour += triangleColour;
+						sampleTriangleIndices[sample] = maybeIntersection.triangleIndex;
+						sampleTriangleColours[sample] = triangleColour;
+					}
+				}
+#else
 				if (hasIntersection) {
 					colour += SurfaceColour(maybeIntersection, lights, d);
 				}
-			}
+#endif
 
+			}
 			PutPixelSDL(screen, x, y, colour / float(AA_SAMPLES));
 		}
 	}
