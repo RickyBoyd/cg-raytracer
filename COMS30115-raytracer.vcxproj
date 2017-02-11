@@ -77,6 +77,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>C:\lib\SDL-1.2.15\include;C:\lib\glm-0.9.8.4\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
@@ -97,6 +98,7 @@
       <Optimization>MaxSpeedHighLevel</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
@@ -112,6 +114,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>C:\lib\SDL-1.2.15\include;C:\lib\glm-0.9.8.4\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>SDL.lib;SDLmain.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -126,6 +129,7 @@
       <OpenMPSupport>true</OpenMPSupport>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>SDL.lib;SDLmain.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -134,17 +138,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="source\Model.cpp" />
     <ClCompile Include="source\raytracer.cpp" />
+    <ClCompile Include="Source\TestModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="source\Model.h" />
     <ClInclude Include="source\raytracer.h" />
     <ClInclude Include="source\SDLauxiliary.h" />
     <ClInclude Include="source\TestModel.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="cmake-build-debug\cmakefiles\3.6.3\CMakeDetermineCompilerABI_C.bin" />
-    <None Include="cmake-build-debug\cmakefiles\3.6.3\CMakeDetermineCompilerABI_CXX.bin" />
-    <None Include="cmake-build-debug\cmakefiles\feature_tests.bin" />
+    <Object Include="Resources\humanoid_tri.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Object>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
