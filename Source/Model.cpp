@@ -17,7 +17,6 @@ Model::Model(std::string filename)
 		}
 		else if (tokens[0].compare("f") == 0)
 		{
-			// TODO: support vt and vn indices
 			std::vector<std::string> vertex1 = SplitString(tokens[1], "/");
 			std::vector<std::string> vertex2 = SplitString(tokens[2], "/");
 			std::vector<std::string> vertex3 = SplitString(tokens[3], "/");

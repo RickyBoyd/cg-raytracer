@@ -13,6 +13,7 @@
 #include "Model.h"
 #include "Light.h"
 #include "Scene.h"
+#include "Material.h"
 
 #define EDGE_AA
 
@@ -99,6 +100,8 @@ int main(int argc, char *argv[]) {
 		Camera{ glm::vec3(0.0f, 4.0f, -7.0f), 30.0f, 0.0f, 0.0f });
 
 	Scene &scene = teapotScene;
+
+	auto materials = Material::LoadMaterials("Resources/red.mtl");
 	
 	std::vector<Triangle> sceneTris = scene.ToTriangles();
 	triangles.insert(triangles.end(), sceneTris.begin(), sceneTris.end());

@@ -140,6 +140,7 @@
   <ItemGroup>
     <ClCompile Include="Source\Camera.cpp" />
     <ClCompile Include="Source\Light.cpp" />
+    <ClCompile Include="Source\Material.cpp" />
     <ClCompile Include="source\Model.cpp" />
     <ClCompile Include="source\raytracer.cpp" />
     <ClCompile Include="Source\Scene.cpp" />
@@ -149,6 +150,7 @@
   <ItemGroup>
     <ClInclude Include="Source\Camera.h" />
     <ClInclude Include="Source\Light.h" />
+    <ClInclude Include="Source\Material.h" />
     <ClInclude Include="source\Model.h" />
     <ClInclude Include="source\raytracer.h" />
     <ClInclude Include="Source\Scene.h" />
