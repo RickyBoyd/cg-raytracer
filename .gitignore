@@ -37,7 +37,7 @@ CTestTestfile.cmake
 # Object files
 *.o
 *.ko
-*.obj
+#*.obj
 *.elf
 
 # Linker output
@@ -186,7 +186,7 @@ fabric.properties
 *.slo
 *.lo
 *.o
-*.obj
+#*.obj
 
 # Precompiled Headers
 *.gch

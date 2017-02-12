@@ -23,17 +23,29 @@ Model::Model(std::string filename)
 			std::vector<std::string> vertex3 = SplitString(tokens[3], "/");
 			if (vertex1.size() >= 1 && vertex2.size() >= 1 && vertex3.size() >= 1)
 			{
-				face_vertex_indices.push_back(glm::vec3(std::stoi(vertex1[0]), std::stoi(vertex2[0]), std::stoi(vertex3[0])));
-			} 
+				try
+				{
+					face_vertex_indices.push_back(glm::vec3(std::stoi(vertex1[0]), std::stoi(vertex2[0]), std::stoi(vertex3[0])));
+				}
+				catch (std::exception e) {}
+			}
 			if (vertex1.size() >= 2 && vertex2.size() >= 2 && vertex3.size() >= 2)
 			{
-				face_texture_indices.push_back(glm::vec3(std::stoi(vertex1[1]), std::stoi(vertex2[1]), std::stoi(vertex3[1])));
+				try
+				{
+					face_texture_indices.push_back(glm::vec3(std::stoi(vertex1[1]), std::stoi(vertex2[1]), std::stoi(vertex3[1])));
+				}
+				catch (std::exception e) {}
 			}
 			if (vertex1.size() >= 3 && vertex2.size() >= 3 && vertex3.size() >= 3)
 			{
-				face_normal_indices.push_back(glm::vec3(std::stoi(vertex1[2]), std::stoi(vertex2[2]), std::stoi(vertex3[2])));
+				try
+				{
+					face_normal_indices.push_back(glm::vec3(std::stoi(vertex1[2]), std::stoi(vertex2[2]), std::stoi(vertex3[2])));
+				}
+				catch (std::exception e) {}
 			}
-		} 
+		}
 		else if (tokens[0].compare("vn") == 0)
 		{
 			auto normal = glm::vec3(std::stof(tokens[1]), std::stof(tokens[2]), std::stof(tokens[3]));
@@ -63,7 +75,8 @@ std::vector<Triangle> Model::ToTriangles() const
 				glm::vec3(0.75f, 0.15f, 0.15f),
 				normals[face_normal_indices[i].x - 1]);
 			tris.push_back(tri);
-		} else
+		}
+		else
 		{
 			Triangle tri = Triangle(
 				vertices[face_vertex_indices[i].x - 1],
