@@ -138,24 +138,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Camera.cpp" />
+    <ClCompile Include="Source\Light.cpp" />
     <ClCompile Include="source\Model.cpp" />
     <ClCompile Include="source\raytracer.cpp" />
+    <ClCompile Include="Source\Scene.cpp" />
     <ClCompile Include="Source\SDLauxiliary.cpp" />
     <ClCompile Include="Source\TestModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Camera.h" />
+    <ClInclude Include="Source\Light.h" />
     <ClInclude Include="source\Model.h" />
     <ClInclude Include="source\raytracer.h" />
+    <ClInclude Include="Source\Scene.h" />
     <ClInclude Include="source\SDLauxiliary.h" />
     <ClInclude Include="source\TestModel.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Object Include="Resources\humanoid_tri.obj">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </Object>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

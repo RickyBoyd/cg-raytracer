@@ -11,7 +11,8 @@
 #include <glm/detail/type_mat.hpp>
 #include <algorithm>
 #include "Model.h"
-//#include <omp.h>
+#include "Light.h"
+#include "Scene.h"
 
 #define EDGE_AA
 
@@ -35,16 +36,11 @@ struct Intersection {
 	int triangleIndex;
 };
 
-struct Light {
-	vec3 position;
-	vec3 color;
-};
-
 /* ----------------------------------------------------------------------------*/
 /* GLOBAL VARIABLES                                                            */
 
-const int SCREEN_WIDTH = 500;
-const int SCREEN_HEIGHT = 500;
+const int SCREEN_WIDTH = 200;
+const int SCREEN_HEIGHT = 200;
 const int AA_SAMPLES = 4;
 const glm::vec2 JITTER_MATRIX[AA_SAMPLES] = { glm::vec2(-0.25, 0.75), glm::vec2(0.75, 0.25), glm::vec2(-0.75, -0.25), glm::vec2(0.25, -0.75) };
 SDL_Surface *screen;
@@ -55,9 +51,9 @@ const float FOCAL_LENGTH = SCREEN_WIDTH / 2;
 /* ----------------------------------------------------------------------------*/
 /* FUNCTIONS                                                                   */
 
-void Update(glm::vec3 &cameraPos, vector<Light> &lights, Uint8 &lightSelected, vec3 &pitchYawRoll);
+void Update(Scene &scene, Uint8 &lightSelected);
 
-void Draw(glm::vec3 &cameraPos, vec3 pitchYawRoll, vector<Light> &lights);
+void Draw(Scene &scene);
 
 void Interpolate(float a, float b, vector<float> &result);
 
@@ -79,29 +75,45 @@ int main(int argc, char *argv[]) {
 
 	Uint8 lightSelected = 0;
 
-	//LoadTestModel(triangles);
+	auto cubeScene = Scene(
+		std::vector<ModelInstance> { ModelInstance(Model("Resources/cube.obj"), glm::vec3(0.0f, 0.0f, 0.0f)) },
+		std::vector<Light> { Light{ vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
+		Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
+
+	auto bunnyScene = Scene(
+		std::vector<ModelInstance> { ModelInstance(Model("Resources/bunny.obj"), glm::vec3(0.0f, 0.0f, 0.0f)) },
+		std::vector<Light> { 
+			Light{ vec3(0.0f, 0.5f, -1.0f), 15.0f * vec3(1,1,1) },
+			Light{ vec3(0.5f, 0.1f, 0.0f), 15.0f * vec3(1,1,1) }},
+		Camera{ glm::vec3(0.0f, 0.1f, -0.15f), 0.0f, 0.0f, 0.0f });
+
+	auto teapotScene = Scene(
+		std::vector<ModelInstance> { 
+			ModelInstance(Model("Resources/teapot.obj"), glm::vec3(-3.0f, 0.0f, 0.0f)),
+			ModelInstance(Model("Resources/cube.obj"), glm::vec3(3.0f, 0.0f, 0.0f))
+		},
+		std::vector<Light> {
+			Light{ vec3(3.0f, 2.0f, 0.0f), 100.0f * vec3(1,1,1) },
+			Light{ vec3(-3.0f, 4.0f, 2.0f), 100.0f * vec3(1,1,1) },
+			Light{ vec3(-3.0f, 4.0f, -2.0f), 30.0f * vec3(1,1,1) }},
+		Camera{ glm::vec3(0.0f, 4.0f, -7.0f), 30.0f, 0.0f, 0.0f });
+
+	Scene &scene = teapotScene;
+	
+	std::vector<Triangle> sceneTris = scene.ToTriangles();
+	triangles.insert(triangles.end(), sceneTris.begin(), sceneTris.end());
 	cout << "Loaded " << triangles.size() << " tris" << endl;
-	//Model model = Model("Resources/humanoid_tri.obj");
-	Model model = Model("Resources/cube.obj");
-	std::vector<Triangle> modelTris = model.ToTriangles();
-	triangles.insert(triangles.end(), modelTris.begin(), modelTris.end());
-
-	vec3 cameraPos(0.0f, 0.0f, -2.0f);
-	vec3 pitchYawRoll = vec3(0.0f, 0.0f, 0.0f);
-
-	vector<Light> lights;
-	AddLight(vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1, 1, 1), lights);
 
 	while (NoQuitMessageSDL()) {
-		Draw(cameraPos, pitchYawRoll, lights);
-		Update(cameraPos, lights, lightSelected, pitchYawRoll);
+		Draw(scene);
+		Update(scene, lightSelected);
 	}
 
 	SDL_SaveBMP(screen, "screenshot.bmp");
 	return 0;
 }
 
-void Update(glm::vec3 &cameraPos, vector<Light> &lights, Uint8 &lightSelected, vec3 &pitchYawRoll) {
+void Update(Scene &scene, Uint8 &lightSelected) {
 	// Compute frame time:
 	int t2 = SDL_GetTicks();
 	float dt = float(t2 - t);
@@ -111,90 +123,90 @@ void Update(glm::vec3 &cameraPos, vector<Light> &lights, Uint8 &lightSelected, v
 	static float movementSpeed = 0.001;
 	static float rotateSpeed = 0.01;
 
-	Uint8 *keystate = SDL_GetKeyState(nullptr);
+	auto keystate = SDL_GetKeyState(nullptr);
 	if (keystate[SDLK_UP]) {
-		cameraPos.y += dt * movementSpeed;
+		scene.camera_.position.y += dt * movementSpeed;
 	}
 	if (keystate[SDLK_DOWN]) {
-		cameraPos.y -= dt * movementSpeed;
+		scene.camera_.position.y -= dt * movementSpeed;
 	}
 	if (keystate[SDLK_LEFT]) {
-		cameraPos.x -= dt * movementSpeed;
+		scene.camera_.position.x -= dt * movementSpeed;
 	}
 	if (keystate[SDLK_RIGHT]) {
-		cameraPos.x += dt * movementSpeed;
+		scene.camera_.position.x += dt * movementSpeed;
 	}
 	if (keystate[SDLK_w]) {
-		lights[lightSelected].position += vec3(0.0f, 0.0f, movementSpeed * dt);
+		scene.lights_[lightSelected].position += vec3(0.0f, 0.0f, movementSpeed * dt);
 	}
 	if (keystate[SDLK_s]) {
-		lights[lightSelected].position += vec3(0.0f, 0.0f, -movementSpeed * dt);
+		scene.lights_[lightSelected].position += vec3(0.0f, 0.0f, -movementSpeed * dt);
 	}
 	if (keystate[SDLK_a]) {
-		lights[lightSelected].position += vec3(-movementSpeed * dt, 0.0f, 0.0f);
+		scene.lights_[lightSelected].position += vec3(-movementSpeed * dt, 0.0f, 0.0f);
 	}
 	if (keystate[SDLK_d]) {
-		lights[lightSelected].position += vec3(movementSpeed * dt, 0.0f, 0.0f);
+		scene.lights_[lightSelected].position += vec3(movementSpeed * dt, 0.0f, 0.0f);
 	}
 	if (keystate[SDLK_q]) {
-		lights[lightSelected].position += vec3(0.0f, movementSpeed * dt, 0.0f);
+		scene.lights_[lightSelected].position += vec3(0.0f, movementSpeed * dt, 0.0f);
 	}
 	if (keystate[SDLK_e]) {
-		lights[lightSelected].position += vec3(0.0f, -movementSpeed * dt, 0.0f);
+		scene.lights_[lightSelected].position += vec3(0.0f, -movementSpeed * dt, 0.0f);
 	}
 	if (keystate[SDLK_n]) {
-		if (lights.size() < 6) {
-			AddLight(vec3(0.0f, 0.0f, 0.0f), 10.0f * vec3(1.0f, 1.0f, 1.0f), lights);
-			lightSelected = static_cast<Uint8>(lights.size()) - 1;
+		if (scene.lights_.size() < 6) {
+			AddLight(vec3(0.0f, 0.0f, 0.0f), 10.0f * vec3(1.0f, 1.0f, 1.0f), scene.lights_);
+			lightSelected = static_cast<Uint8>(scene.lights_.size()) - 1;
 		}
 	}
 
 	if (keystate[SDLK_j])
 	{
-		pitchYawRoll.y -= dt * rotateSpeed;
+		scene.camera_.yaw -= dt * rotateSpeed;
 	}
 	if (keystate[SDLK_l])
 	{
-		pitchYawRoll.y += dt * rotateSpeed;
+		scene.camera_.yaw += dt * rotateSpeed;
 	}
 	if (keystate[SDLK_i])
 	{
-		pitchYawRoll.x -= dt * rotateSpeed;
+		scene.camera_.pitch -= dt * rotateSpeed;
 	}
 	if (keystate[SDLK_k])
 	{
-		pitchYawRoll.x += dt * rotateSpeed;
+		scene.camera_.pitch += dt * rotateSpeed;
 	}
 	if (keystate[SDLK_u])
 	{
-		pitchYawRoll.z -= dt * rotateSpeed;
+		scene.camera_.roll -= dt * rotateSpeed;
 	}
 	if (keystate[SDLK_o])
 	{
-		pitchYawRoll.z += dt * rotateSpeed;
+		scene.camera_.roll += dt * rotateSpeed;
 	}
 
-	if (keystate[SDLK_1] && lights.size() > 0) {
+	if (keystate[SDLK_1] && scene.lights_.size() > 0) {
 		lightSelected = 0;
 	}
-	if (keystate[SDLK_2] && lights.size() > 1) {
+	if (keystate[SDLK_2] && scene.lights_.size() > 1) {
 		lightSelected = 1;
 	}
-	if (keystate[SDLK_3] && lights.size() > 2) {
+	if (keystate[SDLK_3] && scene.lights_.size() > 2) {
 		lightSelected = 2;
 	}
-	if (keystate[SDLK_4] && lights.size() > 3) {
+	if (keystate[SDLK_4] && scene.lights_.size() > 3) {
 		lightSelected = 3;
 	}
-	if (keystate[SDLK_5] && lights.size() > 4) {
+	if (keystate[SDLK_5] && scene.lights_.size() > 4) {
 		lightSelected = 4;
 	}
-	if (keystate[SDLK_6] && lights.size() > 5) {
+	if (keystate[SDLK_6] && scene.lights_.size() > 5) {
 		lightSelected = 5;
 	}
 }
 
-void Draw(glm::vec3 &cameraPos, vec3 pitchYawRoll, vector<Light> &lights) {
+void Draw(Scene &scene) {
 	//SDL_FillRect( screen, 0, 0 );
 
 	if (SDL_MUSTLOCK(screen))
@@ -219,14 +231,14 @@ void Draw(glm::vec3 &cameraPos, vec3 pitchYawRoll, vector<Light> &lights) {
 				vec3 d(u, v, FOCAL_LENGTH);
 
 				// Rotate the direction of the camera->screen ray according to the current pitch, roll and yaw
-				d = glm::rotate(d, glm::radians(pitchYawRoll.x), vec3(1.0f, 0.0f, 0.0f));
-				d = glm::rotate(d, glm::radians(pitchYawRoll.y), vec3(0.0f, 1.0f, 0.0f));
-				d = glm::rotate(d, glm::radians(pitchYawRoll.z), vec3(0.0f, 0.0f, 1.0f));
+				d = glm::rotate(d, glm::radians(scene.camera_.pitch), vec3(1.0f, 0.0f, 0.0f));
+				d = glm::rotate(d, glm::radians(scene.camera_.yaw), vec3(0.0f, 1.0f, 0.0f));
+				d = glm::rotate(d, glm::radians(scene.camera_.roll), vec3(0.0f, 0.0f, 1.0f));
 
 
 				// Find an intersection of this ray with the model, if exists
 				Intersection maybeIntersection;
-				bool hasIntersection = ClosestIntersection(cameraPos, d, triangles, triangles.size(), maybeIntersection);
+				bool hasIntersection = ClosestIntersection(scene.camera_.position, d, triangles, triangles.size(), maybeIntersection);
 
 #ifdef EDGE_AA
 				if (hasIntersection) {
@@ -243,7 +255,7 @@ void Draw(glm::vec3 &cameraPos, vec3 pitchYawRoll, vector<Light> &lights) {
 
 					if (!alreadySampled)
 					{
-						vec3 triangleColour = SurfaceColour(maybeIntersection, lights, d);
+						vec3 triangleColour = SurfaceColour(maybeIntersection, scene.lights_, d);
 						colour += triangleColour;
 						sampleTriangleIndices[sample] = maybeIntersection.triangleIndex;
 						sampleTriangleColours[sample] = triangleColour;
