@@ -16,7 +16,7 @@
 #define EDGE_AA
 
 
-#ifndef unix
+#if defined _WIN32 || defined _WIN64
 extern "C" {
 	FILE __iob_func[3] = { stdin, stdout,*stderr };
 }
@@ -55,7 +55,7 @@ const float FOCAL_LENGTH = SCREEN_WIDTH / 2;
 /* ----------------------------------------------------------------------------*/
 /* FUNCTIONS                                                                   */
 
-void Update(glm::vec3 &cameraPos, vector<Light> &lights, Uint8 *lightSelected, vec3 &pitchYawRoll);
+void Update(glm::vec3 &cameraPos, vector<Light> &lights, Uint8 &lightSelected, vec3 &pitchYawRoll);
 
 void Draw(glm::vec3 &cameraPos, vec3 pitchYawRoll, vector<Light> &lights);
 
@@ -94,14 +94,14 @@ int main(int argc, char *argv[]) {
 
 	while (NoQuitMessageSDL()) {
 		Draw(cameraPos, pitchYawRoll, lights);
-		Update(cameraPos, lights, &lightSelected, pitchYawRoll);
+		Update(cameraPos, lights, lightSelected, pitchYawRoll);
 	}
 
 	SDL_SaveBMP(screen, "screenshot.bmp");
 	return 0;
 }
 
-void Update(glm::vec3 &cameraPos, vector<Light> &lights, Uint8 *lightSelected, vec3 &pitchYawRoll) {
+void Update(glm::vec3 &cameraPos, vector<Light> &lights, Uint8 &lightSelected, vec3 &pitchYawRoll) {
 	// Compute frame time:
 	int t2 = SDL_GetTicks();
 	float dt = float(t2 - t);
@@ -125,27 +125,27 @@ void Update(glm::vec3 &cameraPos, vector<Light> &lights, Uint8 *lightSelected, v
 		cameraPos.x += dt * movementSpeed;
 	}
 	if (keystate[SDLK_w]) {
-		lights[*lightSelected].position += vec3(0.0f, 0.0f, movementSpeed * dt);
+		lights[lightSelected].position += vec3(0.0f, 0.0f, movementSpeed * dt);
 	}
 	if (keystate[SDLK_s]) {
-		lights[*lightSelected].position += vec3(0.0f, 0.0f, -movementSpeed * dt);
+		lights[lightSelected].position += vec3(0.0f, 0.0f, -movementSpeed * dt);
 	}
 	if (keystate[SDLK_a]) {
-		lights[*lightSelected].position += vec3(-movementSpeed * dt, 0.0f, 0.0f);
+		lights[lightSelected].position += vec3(-movementSpeed * dt, 0.0f, 0.0f);
 	}
 	if (keystate[SDLK_d]) {
-		lights[*lightSelected].position += vec3(movementSpeed * dt, 0.0f, 0.0f);
+		lights[lightSelected].position += vec3(movementSpeed * dt, 0.0f, 0.0f);
 	}
 	if (keystate[SDLK_q]) {
-		lights[*lightSelected].position += vec3(0.0f, movementSpeed * dt, 0.0f);
+		lights[lightSelected].position += vec3(0.0f, movementSpeed * dt, 0.0f);
 	}
 	if (keystate[SDLK_e]) {
-		lights[*lightSelected].position += vec3(0.0f, -movementSpeed * dt, 0.0f);
+		lights[lightSelected].position += vec3(0.0f, -movementSpeed * dt, 0.0f);
 	}
 	if (keystate[SDLK_n]) {
 		if (lights.size() < 6) {
 			AddLight(vec3(0.0f, 0.0f, 0.0f), 10.0f * vec3(1.0f, 1.0f, 1.0f), lights);
-			*lightSelected = static_cast<Uint8>(lights.size()) - 1;
+			lightSelected = static_cast<Uint8>(lights.size()) - 1;
 		}
 	}
 
@@ -175,22 +175,22 @@ void Update(glm::vec3 &cameraPos, vector<Light> &lights, Uint8 *lightSelected, v
 	}
 
 	if (keystate[SDLK_1] && lights.size() > 0) {
-		*lightSelected = 0;
+		lightSelected = 0;
 	}
 	if (keystate[SDLK_2] && lights.size() > 1) {
-		*lightSelected = 1;
+		lightSelected = 1;
 	}
 	if (keystate[SDLK_3] && lights.size() > 2) {
-		*lightSelected = 2;
+		lightSelected = 2;
 	}
 	if (keystate[SDLK_4] && lights.size() > 3) {
-		*lightSelected = 3;
+		lightSelected = 3;
 	}
 	if (keystate[SDLK_5] && lights.size() > 4) {
-		*lightSelected = 4;
+		lightSelected = 4;
 	}
 	if (keystate[SDLK_6] && lights.size() > 5) {
-		*lightSelected = 5;
+		lightSelected = 5;
 	}
 }
 
