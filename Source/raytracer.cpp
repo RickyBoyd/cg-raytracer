@@ -10,6 +10,7 @@
 #include <glm/detail/type_mat.hpp>
 #include <glm/detail/type_mat.hpp>
 #include <algorithm>
+#include "Model.h"
 //#include <omp.h>
 
 #define EDGE_AA
@@ -78,8 +79,12 @@ int main(int argc, char *argv[]) {
 
 	Uint8 lightSelected = 0;
 
-	LoadTestModel(triangles);
+	//LoadTestModel(triangles);
 	cout << "Loaded " << triangles.size() << " tris" << endl;
+	//Model model = Model("Resources/humanoid_tri.obj");
+	Model model = Model("Resources/cube.obj");
+	std::vector<Triangle> modelTris = model.ToTriangles();
+	triangles.insert(triangles.end(), modelTris.begin(), modelTris.end());
 
 	vec3 cameraPos(0.0f, 0.0f, -2.0f);
 	vec3 pitchYawRoll = vec3(0.0f, 0.0f, 0.0f);
