@@ -57,13 +57,14 @@ Model::Model(std::string filename)
 std::vector<std::string> Model::SplitString(const std::string& str, const std::string& regex)
 {
 	std::regex re(regex);
-	std::sregex_token_iterator first{ str.begin(), str.end(), re, -1 }, last;
-	return { first, last };
+	std::sregex_token_iterator first( str.begin(), str.end(), re, -1 );
+	std::sregex_token_iterator last;
+	return std::vector<std::string>(first, last);
 }
 
 std::vector<Triangle> Model::ToTriangles() const
 {
-	std::vector<Triangle> tris{};
+	std::vector<Triangle> tris;
 	tris.reserve(face_vertex_indices.size());
 	for (int i = 0; i < face_vertex_indices.size(); i++)
 	{
@@ -75,8 +76,7 @@ std::vector<Triangle> Model::ToTriangles() const
 				glm::vec3(0.75f, 0.15f, 0.15f),
 				normals[face_normal_indices[i].x - 1]);
 			tris.push_back(tri);
-		}
-		else
+		} else
 		{
 			Triangle tri = Triangle(
 				vertices[face_vertex_indices[i].x - 1],
