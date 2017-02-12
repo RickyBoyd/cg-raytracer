@@ -339,7 +339,7 @@ vec3 DirectLight(const Intersection &intersection, vector<Light> &lights, vec3 i
 		// Otherwise, compute the light's power per unit area at the intersection
 		vec3 B = (light.color / static_cast<float>(4 * lightDistance * lightDistance * M_PI));
 		// Compute a normalising factor based on the angle between the shadow ray and the surface normal
-		float dp = glm::dot(glm::normalize(triangles[intersection.triangleIndex].normal), glm::normalize(shadowRay));
+		float dp = abs(glm::dot(glm::normalize(triangles[intersection.triangleIndex].normal), glm::normalize(shadowRay)));
 		lightIntensity += B * glm::max(dp, 0.0f);
 
 		// Compute direction of 'ideal' reflection from light source
