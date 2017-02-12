@@ -346,6 +346,15 @@ vec3 DirectLight(const Intersection &intersection, vector<Light> &lights, vec3 i
 	return lightIntensity * Kdiffuse + specularIntensity * Kspecular;
 }
 
+bool refract(vec3 d, vec3 normal, float n, float nt, vec3 &t)
+{
+	float ndotd = glm::dot(n, d);
+	float temp = 1 - (n*n*(1 - ndotd* ndotd)) / (nt*nt);
+	if(temp < 0) return false; //since no sqaureroot so total internl reflection occurs
+	t = (n*(d - n*ndotd))/nt -  n * static_cast<float>(sqrt(temp));
+	return true;
+}
+
 
 void Interpolate(float a, float b, vector<float> &result) {
 	if (result.size() == 0) return;
