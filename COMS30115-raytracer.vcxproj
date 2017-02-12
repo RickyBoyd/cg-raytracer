@@ -140,6 +140,7 @@
   <ItemGroup>
     <ClCompile Include="source\Model.cpp" />
     <ClCompile Include="source\raytracer.cpp" />
+    <ClCompile Include="Source\SDLauxiliary.cpp" />
     <ClCompile Include="Source\TestModel.cpp" />
   </ItemGroup>
   <ItemGroup>
