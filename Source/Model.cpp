@@ -1,10 +1,16 @@
 ﻿#include "Model.h"
+#include <experimental/filesystem>
 
-Model::Model(std::vector<glm::vec3> vertices, std::vector<glm::vec3> face_vertex_indices) : vertices(vertices), face_vertex_indices(face_vertex_indices) {}
+Model::Model(std::vector<std::shared_ptr<Face>> faces) : faces_(faces) {}
 
 Model::Model(std::string filename)
 {
-	std::ifstream is(filename);
+	// TODO: implement support for groups/objects
+	auto path = new std::experimental::filesystem::path(filename);
+	std::ifstream is(path->string());
+
+	Material default_material = Material("default", glm::vec3(0.75f, 0, 0.75f), glm::vec3(0.75f, 0, 0.75f), glm::vec3(0.75f, 0, 0.75f), 50.0f, 0.0f);
+	Material &material = default_material;
 
 	for (std::string str; std::getline(is, str);)
 	{
@@ -13,42 +19,82 @@ Model::Model(std::string filename)
 		if (tokens[0].compare("v") == 0)
 		{
 			auto vertex = glm::vec3(std::stof(tokens[1]), std::stof(tokens[2]), std::stof(tokens[3]));
-			vertices.push_back(vertex);
+			vertices_.push_back(vertex);
 		}
 		else if (tokens[0].compare("f") == 0)
 		{
 			std::vector<std::string> vertex1 = SplitString(tokens[1], "/");
 			std::vector<std::string> vertex2 = SplitString(tokens[2], "/");
 			std::vector<std::string> vertex3 = SplitString(tokens[3], "/");
+
+			std::vector<glm::vec3> vertices{};
+			auto texture_coords = std::optional<std::vector<glm::vec2>>{};
+			glm::vec3 normal;
+
+			// If vertex coordinates have first part, retrieve the vertices for the face
 			if (vertex1.size() >= 1 && vertex2.size() >= 1 && vertex3.size() >= 1)
 			{
 				try
 				{
-					face_vertex_indices.push_back(glm::vec3(std::stoi(vertex1[0]), std::stoi(vertex2[0]), std::stoi(vertex3[0])));
+					vertices.push_back(vertices_[std::stoi(vertex1[0]) - 1]);
+					vertices.push_back(vertices_[std::stoi(vertex2[0]) - 1]);
+					vertices.push_back(vertices_[std::stoi(vertex3[0]) - 1]);
 				}
 				catch (std::exception e) {}
 			}
+
+			// If vertex coordinates have second part, retrieve the texture coordinates for the face
 			if (vertex1.size() >= 2 && vertex2.size() >= 2 && vertex3.size() >= 2)
 			{
 				try
 				{
-					face_texture_indices.push_back(glm::vec3(std::stoi(vertex1[1]), std::stoi(vertex2[1]), std::stoi(vertex3[1])));
+					auto coords = std::vector<glm::vec2>{};
+					coords.push_back(texture_coords_[std::stoi(vertex1[1]) - 1]);
+					coords.push_back(texture_coords_[std::stoi(vertex2[1]) - 1]);
+					coords.push_back(texture_coords_[std::stoi(vertex3[1]) - 1]);
+
+					texture_coords = coords;
 				}
 				catch (std::exception e) {}
 			}
+
+			// If vertex coordinates have third part, retrieve the normal for the face
 			if (vertex1.size() >= 3 && vertex2.size() >= 3 && vertex3.size() >= 3)
 			{
 				try
 				{
-					face_normal_indices.push_back(glm::vec3(std::stoi(vertex1[2]), std::stoi(vertex2[2]), std::stoi(vertex3[2])));
+					normal = normals_[std::stoi(vertex1[2]) - 1];
 				}
 				catch (std::exception e) {}
+			} else
+			{
+				glm::vec3 e1 = vertices[1] - vertices[0];
+				glm::vec3 e2 = vertices[2] - vertices[0];
+				normal = glm::normalize(glm::cross(e2, e1));
 			}
+
+			auto face = Face(vertices, texture_coords, std::make_optional(normal), material);
+			faces_.push_back(std::make_shared<Face>(face));
 		}
 		else if (tokens[0].compare("vn") == 0)
 		{
 			auto normal = glm::vec3(std::stof(tokens[1]), std::stof(tokens[2]), std::stof(tokens[3]));
-			normals.push_back(normal);
+			normals_.push_back(normal);
+		}
+		else if (tokens[0].compare("vt") == 0)
+		{
+			auto texture_coord = glm::vec2(std::stof(tokens[1]), std::stof(tokens[2]));
+			texture_coords_.push_back(texture_coord);
+		}
+		else if (tokens[0].compare("mtllib") == 0)
+		{
+			auto materials = Material::LoadMaterials(path->replace_filename(tokens[1]).string());
+			materials_.insert(materials_.end(), materials.begin(), materials.end());
+		}
+		else if (tokens[0].compare("usemtl") == 0)
+		{
+			std::vector<std::shared_ptr<Material>>::iterator matching = std::find_if(materials_.begin(), materials_.end(), [tokens](std::shared_ptr<Material> m) -> bool { return m->name_.compare(tokens[1]) == 0; });
+			material = *(matching->get());
 		}
 	}
 }
@@ -64,26 +110,10 @@ std::vector<std::string> Model::SplitString(const std::string& str, const std::s
 std::vector<Triangle> Model::ToTriangles(const glm::vec3 transform) const
 {
 	std::vector<Triangle> tris;
-	tris.reserve(face_vertex_indices.size());
-	for (int i = 0; i < face_vertex_indices.size(); i++)
+	tris.reserve(faces_.size());
+	for (auto face : faces_)
 	{
-		if (face_normal_indices.size() > 0) {
-			Triangle tri = Triangle(
-				vertices[face_vertex_indices[i].x - 1] + transform,
-				vertices[face_vertex_indices[i].y - 1] + transform,
-				vertices[face_vertex_indices[i].z - 1] + transform,
-				glm::vec3(0.75f, 0.15f, 0.15f),
-				normals[face_normal_indices[i].x - 1]);
-			tris.push_back(tri);
-		} else
-		{
-			Triangle tri = Triangle(
-				vertices[face_vertex_indices[i].x - 1] + transform,
-				vertices[face_vertex_indices[i].y - 1] + transform,
-				vertices[face_vertex_indices[i].z - 1] + transform,
-				glm::vec3(0.75f, 0.15f, 0.15f));
-			tris.push_back(tri);
-		}
+		tris.push_back(face->ToTriangle(transform));
 	}
 	return tris;
 }

@@ -5,17 +5,20 @@
 #include <string>
 #include <regex>
 #include "TestModel.h"
+#include "Material.h"
+#include "Face.h"
+
 
 class Model
 {
 public:
-	std::vector<glm::vec3> vertices;
-	std::vector<glm::vec3> normals;
-	std::vector<glm::vec3> face_vertex_indices;
-	std::vector<glm::vec3> face_texture_indices;
-	std::vector<glm::vec3> face_normal_indices;
+	std::vector<glm::vec3> vertices_;
+	std::vector<glm::vec3> normals_;
+	std::vector<glm::vec2> texture_coords_;
+	std::vector<std::shared_ptr<Material>> materials_;
+	std::vector<std::shared_ptr<Face>> faces_;
 
-	Model(std::vector<glm::vec3> vertices, std::vector<glm::vec3> face_vertex_indices);
+	Model(std::vector<std::shared_ptr<Face>> faces);
 
 	Model(std::string filename);
 

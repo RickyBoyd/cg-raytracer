@@ -40,8 +40,8 @@ struct Intersection {
 /* ----------------------------------------------------------------------------*/
 /* GLOBAL VARIABLES                                                            */
 
-const int SCREEN_WIDTH = 200;
-const int SCREEN_HEIGHT = 200;
+const int SCREEN_WIDTH = 300;
+const int SCREEN_HEIGHT = 300;
 const int AA_SAMPLES = 4;
 const glm::vec2 JITTER_MATRIX[AA_SAMPLES] = { glm::vec2(-0.25, 0.75), glm::vec2(0.75, 0.25), glm::vec2(-0.75, -0.25), glm::vec2(0.25, -0.75) };
 SDL_Surface *screen;
@@ -80,14 +80,14 @@ int main(int argc, char *argv[]) {
 		std::vector<ModelInstance> { ModelInstance(Model("Resources/cube.obj"), glm::vec3(0.0f, 0.0f, 0.0f)) },
 		std::vector<Light> { Light{ vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
 		Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
-
+	
 	auto bunnyScene = Scene(
 		std::vector<ModelInstance> { ModelInstance(Model("Resources/bunny.obj"), glm::vec3(0.0f, 0.0f, 0.0f)) },
 		std::vector<Light> { 
 			Light{ vec3(0.0f, 0.5f, -1.0f), 15.0f * vec3(1,1,1) },
 			Light{ vec3(0.5f, 0.1f, 0.0f), 15.0f * vec3(1,1,1) }},
 		Camera{ glm::vec3(0.0f, 0.1f, -0.15f), 0.0f, 0.0f, 0.0f });
-
+	/*
 	auto teapotScene = Scene(
 		std::vector<ModelInstance> { 
 			ModelInstance(Model("Resources/teapot.obj"), glm::vec3(-3.0f, 0.0f, 0.0f)),
@@ -97,11 +97,9 @@ int main(int argc, char *argv[]) {
 			Light{ vec3(3.0f, 2.0f, 0.0f), 100.0f * vec3(1,1,1) },
 			Light{ vec3(-3.0f, 4.0f, 2.0f), 100.0f * vec3(1,1,1) },
 			Light{ vec3(-3.0f, 4.0f, -2.0f), 30.0f * vec3(1,1,1) }},
-		Camera{ glm::vec3(0.0f, 4.0f, -7.0f), 30.0f, 0.0f, 0.0f });
+		Camera{ glm::vec3(0.0f, 4.0f, -7.0f), 30.0f, 0.0f, 0.0f });*/
 
-	Scene &scene = teapotScene;
-
-	auto materials = Material::LoadMaterials("Resources/red.mtl");
+	Scene &scene = cubeScene;
 	
 	std::vector<Triangle> sceneTris = scene.ToTriangles();
 	triangles.insert(triangles.end(), sceneTris.begin(), sceneTris.end());
