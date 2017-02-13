@@ -346,12 +346,22 @@ vec3 DirectLight(const Intersection &intersection, vector<Light> &lights, vec3 i
 	return lightIntensity * Kdiffuse + specularIntensity * Kspecular;
 }
 
+/** @brief Decides if ray is refracted or totally internally reflected,
+ *         if refracted puts the direction of the refracted ray into t
+ *
+ *  @param d      The incident ray.
+ *  @param normal The normal of the intersected surface
+ *  @param n      The refractive index of the material the incident ray is coming from.
+ *  @param nt     The refractive index of the material the ray is entering.
+ *  @param t      The direction of the refracted ray.
+ *  @return bool  Does ray refract.
+ */
 bool refract(vec3 d, vec3 normal, float n, float nt, vec3 &t)
 {
-	float ndotd = glm::dot(n, d);
-	float temp = 1 - (n*n*(1 - ndotd* ndotd)) / (nt*nt);
+	float normalDotd = glm::dot(normal, d);
+	float temp = 1 - (n*n*(1 - normalDotd* normalDotd)) / (nt*nt);
 	if(temp < 0) return false; //since no sqaureroot so total internl reflection occurs
-	t = (n*(d - n*ndotd))/nt -  n * static_cast<float>(sqrt(temp));
+	t = (n*(d - n*normalDotd))/nt -  n * static_cast<float>(sqrt(temp));
 	return true;
 }
 
