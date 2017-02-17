@@ -317,7 +317,6 @@ vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, int triangleIn
 		//float R;
 		//Fresnel(incidentRay, normal, refractiveIndex, R) ;
 		float R = Fresnel(c, refractiveIndex);
-		cout << R << endl;
 		vec3 refractionColor = Trace(maybeIntersection.position, refractionRay, lights, maybeIntersection.triangleIndex, depth + 1);
 		return (1.0f - R)*refractionColor + R*reflectionColor;
 	} 
