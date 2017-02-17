@@ -13,7 +13,7 @@
 //#include <omp.h>
 
 #define EDGE_AA
-
+#define RAY_DEPTH 7
 
 #if defined _WIN32 || defined _WIN64
 extern "C" {
@@ -23,6 +23,7 @@ extern "C" {
 	FILE __imp_fprintf[3] = { stdin, stdout,*stderr };
 }
 #endif
+
 
 using namespace std;
 using glm::vec3;
@@ -63,6 +64,10 @@ void Interpolate(float a, float b, vector<float> &result);
 bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles, int currentTriangleIndex,
                          Intersection &closestIntersection);
 
+vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights,  int triangleIndex, int depth);
+
+float Fresnel(float c, float n);
+
 vec3 DirectLight(const Intersection &i, vector<Light> &lights, vec3 incidentRay);
 
 vec3 IndirectLight();
@@ -71,6 +76,9 @@ vec3 SurfaceColour(const Intersection &i, vector<Light> &lights, vec3 incidentRa
 
 void AddLight(vec3 pos, vec3 color, vector<Light> &lights);
 
+bool Refract(vec3 d, vec3 normal, float n, vec3 &t);
+
+vec3 Reflect(vec3 d, vec3 normal);
 
 int main(int argc, char *argv[]) {
 	screen = InitializeSDL(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -81,11 +89,11 @@ int main(int argc, char *argv[]) {
 	LoadTestModel(triangles);
 	cout << "Loaded " << triangles.size() << " tris" << endl;
 
-	vec3 cameraPos(0.0f, 0.0f, -2.0f);
+	vec3 cameraPos(-0.2f, -0.2f, -2.0f);
 	vec3 pitchYawRoll = vec3(0.0f, 0.0f, 0.0f);
 
 	vector<Light> lights;
-	AddLight(vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1, 1, 1), lights);
+	AddLight(vec3(-0.3f, 0.2f, -0.7f), 15.0f * vec3(1, 1, 1), lights);
 
 	while (NoQuitMessageSDL()) {
 		Draw(cameraPos, pitchYawRoll, lights);
@@ -200,17 +208,17 @@ void Draw(glm::vec3 &cameraPos, vec3 pitchYawRoll, vector<Light> &lights) {
 	for (int y = 0; y < SCREEN_HEIGHT; y++) {
 		for (int x = 0; x < SCREEN_WIDTH; x++) {
 
-			vec3 colour(0.0f, 0.0f, 0.0f);
+			vec3 color(0.0f, 0.0f, 0.0f);
 
 			// Record the indices of the triangles at each sample point. If we hit the same triangle twice we can re-use the surface colour
-			int sampleTriangleIndices[AA_SAMPLES];
-			std::fill(std::begin(sampleTriangleIndices), std::end(sampleTriangleIndices), -1);
-			vec3 sampleTriangleColours[AA_SAMPLES];
+			//int sampleTriangleIndices[AA_SAMPLES];
+			//std::fill(std::begin(sampleTriangleIndices), std::end(sampleTriangleIndices), -1);
+			//vec3 sampleTriangleColours[AA_SAMPLES];
 
-			for (int sample = 0; sample < AA_SAMPLES; sample++) {
+			//for (int sample = 0; sample < AA_SAMPLES; sample++) {
 				// Compute the corresponding camera-space co-ordinates (u,v,f) for this point on the screen
-				float u = x - SCREEN_WIDTH / 2 + JITTER_MATRIX[sample].x;
-				float v = (SCREEN_HEIGHT - y) - SCREEN_HEIGHT / 2 + JITTER_MATRIX[sample].y;
+				float u = x - SCREEN_WIDTH / 2; // + JITTER_MATRIX[sample].x;
+				float v = (SCREEN_HEIGHT - y) - SCREEN_HEIGHT / 2; // + JITTER_MATRIX[sample].y;
 				vec3 d(u, v, FOCAL_LENGTH);
 
 				// Rotate the direction of the camera->screen ray according to the current pitch, roll and yaw
@@ -218,40 +226,36 @@ void Draw(glm::vec3 &cameraPos, vec3 pitchYawRoll, vector<Light> &lights) {
 				d = glm::rotate(d, glm::radians(pitchYawRoll.y), vec3(0.0f, 1.0f, 0.0f));
 				d = glm::rotate(d, glm::radians(pitchYawRoll.z), vec3(0.0f, 0.0f, 1.0f));
 
+// #ifdef EDGE_AA
+// 				if (hasIntersection) {
+// 					bool alreadySampled = false;
+// 					for (int i = 0; i < AA_SAMPLES; i++)
+// 					{
+// 						if (sampleTriangleIndices[i] == maybeIntersection.triangleIndex)
+// 						{
+// 							colour += sampleTriangleColours[i];
+// 							alreadySampled = true;
+// 							break;
+// 						}
+// 					}
 
-				// Find an intersection of this ray with the model, if exists
-				Intersection maybeIntersection;
-				bool hasIntersection = ClosestIntersection(cameraPos, d, triangles, triangles.size(), maybeIntersection);
+// 					if (!alreadySampled)
+// 					{
+// 						vec3 triangleColour = Trace(d, 0);
+// 						colour += triangleColour;
+// 						sampleTriangleIndices[sample] = maybeIntersection.triangleIndex;
+// 						sampleTriangleColours[sample] = triangleColour;
+// 					}
+// 				}
+// #else
+// 				if (hasIntersection) {
+// 					colour += Trace(d, 0);
+// 				}
+// #endif
 
-#ifdef EDGE_AA
-				if (hasIntersection) {
-					bool alreadySampled = false;
-					for (int i = 0; i < AA_SAMPLES; i++)
-					{
-						if (sampleTriangleIndices[i] == maybeIntersection.triangleIndex)
-						{
-							colour += sampleTriangleColours[i];
-							alreadySampled = true;
-							break;
-						}
-					}
-
-					if (!alreadySampled)
-					{
-						vec3 triangleColour = SurfaceColour(maybeIntersection, lights, d);
-						colour += triangleColour;
-						sampleTriangleIndices[sample] = maybeIntersection.triangleIndex;
-						sampleTriangleColours[sample] = triangleColour;
-					}
-				}
-#else
-				if (hasIntersection) {
-					colour += SurfaceColour(maybeIntersection, lights, d);
-				}
-#endif
-
-			}
-			PutPixelSDL(screen, x, y, colour / float(AA_SAMPLES));
+//			}
+			color += Trace(cameraPos, d, lights, triangles.size(), 0);
+			PutPixelSDL(screen, x, y, color);
 		}
 	}
 
@@ -259,6 +263,97 @@ void Draw(glm::vec3 &cameraPos, vec3 pitchYawRoll, vector<Light> &lights) {
 		SDL_UnlockSurface(screen);
 
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
+}
+
+vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, int triangleIndex, int depth)
+{
+	// Find an intersection of this ray with the model, if exists
+	float bias = 1e-3;
+	Intersection maybeIntersection;
+	bool hasIntersection = ClosestIntersection(startPos, incidentRay, triangles, triangleIndex, maybeIntersection);
+	if(!hasIntersection)
+	{
+		return vec3(0.0f, 0.0f, 0.0f);
+	}
+	Triangle triangle = triangles[maybeIntersection.triangleIndex];
+	if( (triangle.transparency > 0 || triangle.reflectivity > 0) && depth <= RAY_DEPTH)  //NEED TO OBTAIN TRANPARENCY AND REFLECTIVITY SOMEHOW
+	{
+		vec3 normal = triangles[maybeIntersection.triangleIndex].normal;
+		float c;
+		float refractiveIndex = triangle.transparency;
+
+		//vec3 reflectionRay = glm::reflect(incidentRay, normal);
+
+		//vec3 reflectionColor = Trace(maybeIntersection.position, reflectionRay, lights, maybeIntersection.triangleIndex, depth + 1);
+
+		vec3 refractionRay(0.0f, 0.0f, 0.0f);
+		normal = glm::normalize(normal);
+		incidentRay = glm::normalize(incidentRay);
+		
+		vec3 zero(0.0f, 0.0f, 0.0f);
+		bool inside = glm::dot(incidentRay, normal) < 0;
+		if(glm::dot(incidentRay, normal) < 0)
+		{
+			//bool refractionOccurs = Refract( incidentRay, normal, refractiveIndex, refractionRay);
+
+			refractionRay = glm::refract(incidentRay, normal, refractiveIndex);	
+
+			c = -1.0f*glm::dot( incidentRay,  normal);
+		}
+		else
+		{
+			//bool refractionOccurs = Refract( incidentRay, -1.0f*normal, 1.0f/refractiveIndex, refractionRay);
+			refractionRay = glm::refract(incidentRay, -1.0f*normal, 1.0f/refractiveIndex);	
+
+			if (zero != refractionRay)
+			{
+				c = glm::dot(refractionRay, normal);
+			}
+			// else
+			// {
+			// 	return reflectionColor;
+			// }
+			c = -1.0f*glm::dot( incidentRay,  normal);
+		}
+		//float R = Fresnel(c, refractiveIndex);
+
+		//refractionRay = glm::refract(incidentRay, normal, refractiveIndex);	
+		vec3 refractionColor = Trace(maybeIntersection.position, refractionRay, lights, maybeIntersection.triangleIndex, depth + 1);
+		return refractionColor; // + R*reflectionColor;
+	} 
+	else 
+	{
+		return SurfaceColour(maybeIntersection, lights, incidentRay);
+	}
+}
+
+// void fresnel(const Vec3f &I, const Vec3f &N, const float &ior, float &kr) 
+// { 
+//     float cosi = clamp(-1, 1, I.dotProduct(N)); 
+//     float etai = 1, etat = ior; 
+//     if (cosi > 0) { std::swap(etai, etat); } 
+//     // Compute sini using Snell's law
+//     float sint = etai / etat * sqrtf(std::max(0.f, 1 - cosi * cosi)); 
+//     // Total internal reflection
+//     if (sint >= 1) { 
+//         kr = 1; 
+//     } 
+//     else { 
+//         float cost = sqrtf(std::max(0.f, 1 - sint * sint)); 
+//         cosi = fabsf(cosi); 
+//         float Rs = ((etat * cosi) - (etai * cost)) / ((etat * cosi) + (etai * cost)); 
+//         float Rp = ((etai * cosi) - (etat * cost)) / ((etai * cosi) + (etat * cost)); 
+//         kr = (Rs * Rs + Rp * Rp) / 2; 
+//     } 
+//     // As a consequence of the conservation of energy, transmittance is given by:
+//     // kt = 1 - kr;
+// }
+
+float Fresnel(float c, float n)
+{
+	float R0 = ((n-1)*(n-1))/((n+1)*(n+1));
+	float R  = R0 + (1-R0)*((float)pow( 1-c, 5));
+    return R;
 }
 
 /// <summary>Find the triangle intersected first by the ray from start in direction dir.</summary>
@@ -301,7 +396,8 @@ bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles
 	return closestIntersection.distance != std::numeric_limits<float>::max();
 }
 
-vec3 SurfaceColour(const Intersection &i, vector<Light> &lights, vec3 incidentRay) {
+vec3 SurfaceColour(const Intersection &i, vector<Light> &lights, vec3 incidentRay) 
+{
 	return triangles[i.triangleIndex].color * (DirectLight(i, lights, incidentRay) + IndirectLight());
 }
 
@@ -327,8 +423,8 @@ vec3 DirectLight(const Intersection &intersection, vector<Light> &lights, vec3 i
 		// If an intersection was found, and it is between the intersection and the light, this light does not reach the intersection
 		if (hasIntersection) {
 			float shadowRayIntersectionDistance = glm::length(intersection.position - shadowRayIntersection.position);
-			if (shadowRayIntersectionDistance <= lightDistance)
-				continue;
+			if (shadowRayIntersectionDistance <= lightDistance && (triangles[shadowRayIntersection.triangleIndex].transparency <= 0))
+				continue; //this needs some revisiting
 		}
 
 		// Otherwise, compute the light's power per unit area at the intersection
@@ -356,15 +452,26 @@ vec3 DirectLight(const Intersection &intersection, vector<Light> &lights, vec3 i
  *  @param t      The direction of the refracted ray.
  *  @return bool  Does ray refract.
  */
-bool refract(vec3 d, vec3 normal, float n, float nt, vec3 &t)
+bool Refract(vec3 d, vec3 normal, float n, vec3 &t)
 {
-	float normalDotd = glm::dot(normal, d);
-	float temp = 1 - (n*n*(1 - normalDotd* normalDotd)) / (nt*nt);
+	float cosi = glm::dot(normal, d);
+	float temp = 1 - (n*n*(1 - cosi* cosi));
 	if(temp < 0) return false; //since no sqaureroot so total internl reflection occurs
-	t = (n*(d - n*normalDotd))/nt -  n * static_cast<float>(sqrt(temp));
+	t = (n*(d - n*cosi)) -  n * static_cast<float>(sqrt(temp));
+	t = glm::normalize(t);
 	return true;
 }
 
+
+// float cosi = -nhit.dot(raydir); 
+// float temp = 1 - eta * eta * (1 - cosi * cosi); 
+// Vec3f refrdir = raydir * eta + nhit * (eta *  cosi - sqrt(k)); 
+// t = glm::normalize(t); 
+
+vec3 Reflect(vec3 d, vec3 normal)
+{
+	return d - normal * 2.0f * glm::dot(d, normal);
+}
 
 void Interpolate(float a, float b, vector<float> &result) {
 	if (result.size() == 0) return;
