@@ -67,7 +67,7 @@ bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles
 vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights,  int triangleIndex, int depth);
 
 float Fresnel(float c, float n);
-
+//void Fresnel(const vec3 &I, const vec3 &N, const float &ior, float &kr) ;
 vec3 DirectLight(const Intersection &i, vector<Light> &lights, vec3 incidentRay);
 
 vec3 IndirectLight();
@@ -282,13 +282,12 @@ vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, int triangleIn
 		float c;
 		float refractiveIndex = triangle.transparency;
 
-		//vec3 reflectionRay = glm::reflect(incidentRay, normal);
-
-		//vec3 reflectionColor = Trace(maybeIntersection.position, reflectionRay, lights, maybeIntersection.triangleIndex, depth + 1);
-
 		vec3 refractionRay(0.0f, 0.0f, 0.0f);
 		normal = glm::normalize(normal);
 		incidentRay = glm::normalize(incidentRay);
+
+		vec3 reflectionRay = glm::reflect(incidentRay, normal);
+		vec3 reflectionColor = Trace(maybeIntersection.position, reflectionRay, lights, maybeIntersection.triangleIndex, depth + 1);
 		
 		vec3 zero(0.0f, 0.0f, 0.0f);
 		bool inside = glm::dot(incidentRay, normal) < 0;
@@ -309,17 +308,18 @@ vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, int triangleIn
 			{
 				c = glm::dot(refractionRay, normal);
 			}
-			// else
-			// {
-			// 	return reflectionColor;
-			// }
-			c = -1.0f*glm::dot( incidentRay,  normal);
+			else
+			{
+				return reflectionColor;
+			}
+			//c = -1.0f*glm::dot( incidentRay,  normal);
 		}
-		//float R = Fresnel(c, refractiveIndex);
-
-		//refractionRay = glm::refract(incidentRay, normal, refractiveIndex);	
+		//float R;
+		//Fresnel(incidentRay, normal, refractiveIndex, R) ;
+		float R = Fresnel(c, refractiveIndex);
+		cout << R << endl;
 		vec3 refractionColor = Trace(maybeIntersection.position, refractionRay, lights, maybeIntersection.triangleIndex, depth + 1);
-		return refractionColor; // + R*reflectionColor;
+		return (1.0f - R)*refractionColor + R*reflectionColor;
 	} 
 	else 
 	{
@@ -327,9 +327,11 @@ vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, int triangleIn
 	}
 }
 
-// void fresnel(const Vec3f &I, const Vec3f &N, const float &ior, float &kr) 
+// void Fresnel(const vec3 &I, const vec3 &N, const float &ior, float &kr) 
 // { 
-//     float cosi = clamp(-1, 1, I.dotProduct(N)); 
+//     float cosi = glm::dot(N, I); 
+//     cosi = cosi > 1.0f ? 1.0f : cosi;
+//   	cosi = cosi < -1.0f ? -1.0f : cosi;
 //     float etai = 1, etat = ior; 
 //     if (cosi > 0) { std::swap(etai, etat); } 
 //     // Compute sini using Snell's law
@@ -351,6 +353,8 @@ vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, int triangleIn
 
 float Fresnel(float c, float n)
 {
+	c = c > 1.0f ? 1.0f : c;
+	c = c < -1.0f ? -1.0f : c;
 	float R0 = ((n-1)*(n-1))/((n+1)*(n+1));
 	float R  = R0 + (1-R0)*((float)pow( 1-c, 5));
     return R;
