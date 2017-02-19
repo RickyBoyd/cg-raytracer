@@ -208,17 +208,17 @@ void Draw(glm::vec3 &cameraPos, vec3 pitchYawRoll, vector<Light> &lights) {
 	for (int y = 0; y < SCREEN_HEIGHT; y++) {
 		for (int x = 0; x < SCREEN_WIDTH; x++) {
 
-			vec3 color(0.0f, 0.0f, 0.0f);
+			vec3 colour(0.0f, 0.0f, 0.0f);
 
 			// Record the indices of the triangles at each sample point. If we hit the same triangle twice we can re-use the surface colour
-			//int sampleTriangleIndices[AA_SAMPLES];
-			//std::fill(std::begin(sampleTriangleIndices), std::end(sampleTriangleIndices), -1);
-			//vec3 sampleTriangleColours[AA_SAMPLES];
+			int sampleTriangleIndices[AA_SAMPLES];
+			std::fill(std::begin(sampleTriangleIndices), std::end(sampleTriangleIndices), -1);
+			vec3 sampleTriangleColours[AA_SAMPLES];
 
-			//for (int sample = 0; sample < AA_SAMPLES; sample++) {
+			for (int sample = 0; sample < AA_SAMPLES; sample++) {
 				// Compute the corresponding camera-space co-ordinates (u,v,f) for this point on the screen
-				float u = x - SCREEN_WIDTH / 2; // + JITTER_MATRIX[sample].x;
-				float v = (SCREEN_HEIGHT - y) - SCREEN_HEIGHT / 2; // + JITTER_MATRIX[sample].y;
+				float u = x - SCREEN_WIDTH / 2 + JITTER_MATRIX[sample].x;
+				float v = (SCREEN_HEIGHT - y) - SCREEN_HEIGHT / 2  + JITTER_MATRIX[sample].y;
 				vec3 d(u, v, FOCAL_LENGTH);
 
 				// Rotate the direction of the camera->screen ray according to the current pitch, roll and yaw
@@ -226,36 +226,32 @@ void Draw(glm::vec3 &cameraPos, vec3 pitchYawRoll, vector<Light> &lights) {
 				d = glm::rotate(d, glm::radians(pitchYawRoll.y), vec3(0.0f, 1.0f, 0.0f));
 				d = glm::rotate(d, glm::radians(pitchYawRoll.z), vec3(0.0f, 0.0f, 1.0f));
 
-// #ifdef EDGE_AA
-// 				if (hasIntersection) {
-// 					bool alreadySampled = false;
-// 					for (int i = 0; i < AA_SAMPLES; i++)
-// 					{
-// 						if (sampleTriangleIndices[i] == maybeIntersection.triangleIndex)
-// 						{
-// 							colour += sampleTriangleColours[i];
-// 							alreadySampled = true;
-// 							break;
-// 						}
-// 					}
+#ifdef EDGE_AA
 
-// 					if (!alreadySampled)
-// 					{
-// 						vec3 triangleColour = Trace(d, 0);
-// 						colour += triangleColour;
-// 						sampleTriangleIndices[sample] = maybeIntersection.triangleIndex;
-// 						sampleTriangleColours[sample] = triangleColour;
-// 					}
-// 				}
-// #else
-// 				if (hasIntersection) {
-// 					colour += Trace(d, 0);
-// 				}
-// #endif
+					//bool alreadySampled = false;
+					// for (int i = 0; i < AA_SAMPLES; i++)
+					// {
+					// 	if (sampleTriangleIndices[i] == maybeIntersection.triangleIndex)
+					// 	{
+					// 		colour += sampleTriangleColours[i];
+					// 		alreadySampled = true;
+					// 		break;
+					// 	}
+					// }
 
-//			}
-			color += Trace(cameraPos, d, lights, triangles.size(), 0);
-			PutPixelSDL(screen, x, y, color);
+					//if (!alreadySampled)
+					//{
+						vec3 triangleColour = Trace(cameraPos, d, lights, triangles.size(), 0);
+						colour += triangleColour;
+						//sampleTriangleIndices[sample] = maybeIntersection.triangleIndex;
+						sampleTriangleColours[sample] = triangleColour;
+					//}
+#else
+				colour += Trace(cameraPos, d, lights, triangles.size(), 0);
+#endif
+
+			}
+			PutPixelSDL(screen, x, y, colour / float(AA_SAMPLES) );
 		}
 	}
 
