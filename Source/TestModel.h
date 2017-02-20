@@ -24,20 +24,10 @@ public:
 		ComputeNormal();
 	}
 
-	Triangle( glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 color )
-		: v0(v0), v1(v1), v2(v2), color(color)
-	{
-		transparency = 0;
-		reflectivity = 0;
-		ComputeNormal();
-	}
+	Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 color);
+	Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 color, glm::vec3 normal);
 
-	void ComputeNormal()
-	{
-		glm::vec3 e1 = v1-v0;
-		glm::vec3 e2 = v2-v0;
-		normal = glm::normalize( glm::cross( e2, e1 ) );
-	}
+	void ComputeNormal();
 };
 
 // Loads the Cornell Box. It is scaled to fill the volume:
@@ -109,24 +99,24 @@ void LoadTestModel( std::vector<Triangle>& triangles )
 	H = vec3( 82,165,225);
 
 	// Front
-	triangles.push_back( Triangle(E,B,A,red, 1.5f, 0.5f) ); //10
-	triangles.push_back( Triangle(E,F,B,red, 1.5f, 0.5f) ); //11
+	triangles.push_back( Triangle(E,B,A,red) ); //10
+	triangles.push_back( Triangle(E,F,B,red) ); //11
 
 	// Front
-	triangles.push_back( Triangle(F,D,B,red, 1.5f, 0.5f) ); //12
-	triangles.push_back( Triangle(F,H,D,red, 1.5f, 0.5f) ); //13
+	triangles.push_back( Triangle(F,D,B,red) ); //12
+	triangles.push_back( Triangle(F,H,D,red) ); //13
 
 	// BACK
-	triangles.push_back( Triangle(H,C,D,red, 1.5f, 0.5f) ); //14
-	triangles.push_back( Triangle(H,G,C,red, 1.5f, 0.5f) ); //15 
+	triangles.push_back( Triangle(H,C,D,red) ); //14
+	triangles.push_back( Triangle(H,G,C,red) ); //15 
 
 	// LEFT
-	triangles.push_back( Triangle(G,E,C,red, 1.5f, 0.5f) ); //16
-	triangles.push_back( Triangle(E,A,C,red, 1.5f, 0.5f) ); //17
+	triangles.push_back( Triangle(G,E,C,red) ); //16
+	triangles.push_back( Triangle(E,A,C,red) ); //17
 
 	// TOP
-	triangles.push_back( Triangle(G,F,E,red, 1.5f, 0.5f) ); //18
-	triangles.push_back( Triangle(G,H,F,red, 1.5f, 0.5f) ); //19 
+	triangles.push_back( Triangle(G,F,E,red) ); //18
+	triangles.push_back( Triangle(G,H,F,red) ); //19 
 
 	// ---------------------------------------------------------------------------
 	// Tall block
@@ -186,5 +176,6 @@ void LoadTestModel( std::vector<Triangle>& triangles )
 		triangles[i].ComputeNormal();
 	}
 }
+void LoadTestModel(std::vector<Triangle>& triangles);
 
 #endif
