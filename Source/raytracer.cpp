@@ -113,15 +113,15 @@ int main(int argc, char *argv[]) {
 	triangles.insert(triangles.end(), sceneTris.begin(), sceneTris.end());
 	cout << "Loaded " << triangles.size() << " tris" << endl;
 
-<<<<<<< HEAD
-	vec3 cameraPos(-0.2f, -0.2f, -2.0f);
-	vec3 pitchYawRoll = vec3(0.0f, 0.0f, 0.0f);
+// <<<<<<< HEAD
+// 	vec3 cameraPos(-0.2f, -0.2f, -2.0f);
+// 	vec3 pitchYawRoll = vec3(0.0f, 0.0f, 0.0f);
 
-	vector<Light> lights;
-	AddLight(vec3(-0.3f, 0.2f, -0.7f), 15.0f * vec3(1, 1, 1), lights);
+// 	vector<Light> lights;
+// 	AddLight(vec3(-0.3f, 0.2f, -0.7f), 15.0f * vec3(1, 1, 1), lights);
 
-=======
->>>>>>> master
+// =======
+// >>>>>>> master
 	while (NoQuitMessageSDL()) {
 		Draw(scene);
 		Update(scene, lightSelected);

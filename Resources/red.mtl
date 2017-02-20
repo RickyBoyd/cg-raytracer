@@ -4,3 +4,4 @@ newmtl red
    Ks 0.000 0.000 0.000
    d 1.0
    illum 2
+   Ni 1.5

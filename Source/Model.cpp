@@ -28,7 +28,7 @@ Model::Model(std::string filename)
 			std::vector<std::string> vertex3 = SplitString(tokens[3], "/");
 
 			std::vector<glm::vec3> vertices{};
-			auto texture_coords = std::optional<std::vector<glm::vec2>>{};
+			auto texture_coords = std::experimental::optional<std::vector<glm::vec2>>{};
 			glm::vec3 normal;
 
 			// If vertex coordinates have first part, retrieve the vertices for the face

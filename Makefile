@@ -6,8 +6,8 @@ B_DIR=Build
 EXEC=$(B_DIR)/$(FILE)
 
 # default build settings
-CC_OPTS=-c -pipe -Wall -Wno-switch -ggdb -g3 -Ofast -fopenmp
-LN_OPTS=-fopenmp
+CC_OPTS=-c -pipe -Wall -Wno-switch -ggdb -g3 -Ofast -std=c++1z
+LN_OPTS=
 CC=g++
 
 SDL_CFLAGS := $(shell sdl-config --cflags)
