@@ -1,7 +1,7 @@
 # cube.obj
 #
  
-mtllib red.mtl
+mtllib colours.mtl
  
 g cube
 usemtl red

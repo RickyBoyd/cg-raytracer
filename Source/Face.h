@@ -1,6 +1,6 @@
 #pragma once
 #include "Material.h"
-#include "TestModel.h"
+#include "Triangle.h"
 
 class Face
 {

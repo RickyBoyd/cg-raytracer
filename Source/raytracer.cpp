@@ -3,7 +3,7 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <SDL.h>
 #include "SDLauxiliary.h"
-#include "TestModel.h"
+#include "Triangle.h"
 #include <limits>
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -88,7 +88,12 @@ int main(int argc, char *argv[]) {
 		std::vector<Light> { Light{ vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
 		Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
 
-	/*
+	auto cornellBoxScene = Scene(
+		std::vector<ModelInstance> { ModelInstance(Model("Resources/cornell_box.obj"), glm::vec3(0.0f, 0.0f, 0.0f)) },
+		std::vector<Light> { Light { vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
+		Camera { glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
+
+	
 	auto bunnyScene = Scene(
 		std::vector<ModelInstance> { ModelInstance(Model("Resources/bunny.obj"), glm::vec3(0.0f, 0.0f, 0.0f)) },
 		std::vector<Light> {
@@ -105,9 +110,9 @@ int main(int argc, char *argv[]) {
 			Light{ vec3(3.0f, 2.0f, 0.0f), 100.0f * vec3(1,1,1) },
 			Light{ vec3(-3.0f, 4.0f, 2.0f), 100.0f * vec3(1,1,1) },
 			Light{ vec3(-3.0f, 4.0f, -2.0f), 30.0f * vec3(1,1,1) }},
-		Camera{ glm::vec3(0.0f, 4.0f, -7.0f), 30.0f, 0.0f, 0.0f });*/
+		Camera{ glm::vec3(0.0f, 4.0f, -7.0f), 30.0f, 0.0f, 0.0f });
 
-	Scene &scene = cubeScene;
+	Scene &scene = cornellBoxScene;
 
 	std::vector<Triangle> sceneTris = scene.ToTriangles();
 	cout << "Loaded " << sceneTris.size() << " tris" << endl;
