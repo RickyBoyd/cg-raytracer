@@ -8,7 +8,7 @@ EXEC=$(B_DIR)/$(FILE)
 # default build settings
 CC_OPTS=-c -pipe -Wall -Wno-switch -ggdb -g3 -Ofast -std=c++1z -lstdc++fs
 LN_OPTS=-lstdc++fs
-CC=g++-6
+CC=g++
 
 SDL_CFLAGS := $(shell sdl-config --cflags)
 GLM_CFLAGS := -I$(GLMDIR)
