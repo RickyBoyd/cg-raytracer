@@ -16,7 +16,7 @@
 #include "Material.h"
 
 #define EDGE_AA
-#define RAY_DEPTH 7
+#define RAY_DEPTH 4
 
 #if defined _WIN32 || defined _WIN64
 extern "C" {
@@ -47,7 +47,6 @@ const int AA_SAMPLES = 4;
 const glm::vec2 JITTER_MATRIX[AA_SAMPLES] = { glm::vec2(-0.25, 0.75), glm::vec2(0.75, 0.25), glm::vec2(-0.75, -0.25), glm::vec2(0.25, -0.75) };
 SDL_Surface *screen;
 int t;
-vector<Triangle> triangles;
 const float FOCAL_LENGTH = SCREEN_WIDTH / 2;
 
 /* ----------------------------------------------------------------------------*/
@@ -55,22 +54,22 @@ const float FOCAL_LENGTH = SCREEN_WIDTH / 2;
 
 void Update(Scene &scene, Uint8 &lightSelected);
 
-void Draw(Scene &scene);
+void Draw(Scene &scene, const vector<Triangle> &triangles);
 
 void Interpolate(float a, float b, vector<float> &result);
 
 bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles, int currentTriangleIndex,
 	Intersection &closestIntersection);
 
-vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, int triangleIndex, int depth);
+vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, const vector<Triangle> &triangles, int triangleIndex, int depth);
 
 float Fresnel(float c, float n);
 //void Fresnel(const vec3 &I, const vec3 &N, const float &ior, float &kr) ;
-vec3 DirectLight(const Intersection &i, vector<Light> &lights, vec3 incidentRay);
+vec3 DirectLight(const Intersection &i, vector<Light> &lights, const vector<Triangle> &triangles, vec3 incidentRay);
 
 vec3 IndirectLight();
 
-vec3 SurfaceColour(const Intersection &i, vector<Light> &lights, vec3 incidentRay);
+vec3 SurfaceColour(const Intersection &i, vector<Light> &lights, const vector<Triangle> &triangles, vec3 incidentRay);
 
 void AddLight(vec3 pos, vec3 color, vector<Light> &lights);
 
@@ -110,8 +109,7 @@ int main(int argc, char *argv[]) {
 	Scene &scene = cubeScene;
 
 	std::vector<Triangle> sceneTris = scene.ToTriangles();
-	triangles.insert(triangles.end(), sceneTris.begin(), sceneTris.end());
-	cout << "Loaded " << triangles.size() << " tris" << endl;
+	cout << "Loaded " << sceneTris.size() << " tris" << endl;
 
 	// <<<<<<< HEAD
 	// 	vec3 cameraPos(-0.2f, -0.2f, -2.0f);
@@ -123,7 +121,7 @@ int main(int argc, char *argv[]) {
 	// =======
 	// >>>>>>> master
 	while (NoQuitMessageSDL()) {
-		Draw(scene);
+		Draw(scene, sceneTris);
 		Update(scene, lightSelected);
 	}
 
@@ -224,7 +222,7 @@ void Update(Scene &scene, Uint8 &lightSelected) {
 	}
 }
 
-void Draw(Scene &scene) {
+void Draw(Scene &scene, const vector<Triangle> &triangles) {
 	//SDL_FillRect( screen, 0, 0 );
 
 	if (SDL_MUSTLOCK(screen))
@@ -268,7 +266,7 @@ void Draw(Scene &scene) {
 
 				//if (!alreadySampled)
 				//{
-				vec3 triangleColour = Trace(scene.camera_.position, d, scene.lights_, triangles.size(), 0);
+				vec3 triangleColour = Trace(scene.camera_.position, d, scene.lights_, triangles, triangles.size(), 0);
 				colour += triangleColour;
 				//sampleTriangleIndices[sample] = maybeIntersection.triangleIndex;
 				sampleTriangleColours[sample] = triangleColour;
@@ -288,7 +286,7 @@ void Draw(Scene &scene) {
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
 
-vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, int triangleIndex, int depth)
+vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, const vector<Triangle> &triangles, int triangleIndex, int depth)
 {
 	// Find an intersection of this ray with the model, if exists
 	float bias = 1e-3;
@@ -310,7 +308,7 @@ vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, int triangleIn
 		incidentRay = glm::normalize(incidentRay);
 
 		vec3 reflectionRay = glm::reflect(incidentRay, normal);
-		vec3 reflectionColor = Trace(maybeIntersection.position, reflectionRay, lights, maybeIntersection.triangleIndex, depth + 1);
+		vec3 reflectionColor = Trace(maybeIntersection.position, reflectionRay, lights, triangles, maybeIntersection.triangleIndex, depth + 1);
 
 		vec3 zero(0.0f, 0.0f, 0.0f);
 		bool inside = glm::dot(incidentRay, normal) < 0;
@@ -340,12 +338,12 @@ vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, int triangleIn
 		//float R;
 		//Fresnel(incidentRay, normal, refractiveIndex, R) ;
 		float R = Fresnel(c, refractiveIndex);
-		vec3 refractionColor = Trace(maybeIntersection.position, refractionRay, lights, maybeIntersection.triangleIndex, depth + 1);
+		vec3 refractionColor = Trace(maybeIntersection.position, refractionRay, lights, triangles, maybeIntersection.triangleIndex, depth + 1);
 		return (1.0f - R)*refractionColor + R*reflectionColor;
 	}
 	else
 	{
-		return SurfaceColour(maybeIntersection, lights, incidentRay);
+		return SurfaceColour(maybeIntersection, lights, triangles, incidentRay);
 	}
 }
 
@@ -422,9 +420,9 @@ bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles
 	return closestIntersection.distance != std::numeric_limits<float>::max();
 }
 
-vec3 SurfaceColour(const Intersection &i, vector<Light> &lights, vec3 incidentRay)
+vec3 SurfaceColour(const Intersection &i, vector<Light> &lights, const vector<Triangle> &triangles, vec3 incidentRay)
 {
-	return triangles[i.triangleIndex].color * (DirectLight(i, lights, incidentRay) + IndirectLight());
+	return triangles[i.triangleIndex].color * (DirectLight(i, lights, triangles, incidentRay) + IndirectLight());
 }
 
 vec3 IndirectLight()
@@ -433,7 +431,7 @@ vec3 IndirectLight()
 }
 
 // Compute the light intensity at an intersection resulting from direct light
-vec3 DirectLight(const Intersection &intersection, vector<Light> &lights, vec3 incidentRay) {
+vec3 DirectLight(const Intersection &intersection, vector<Light> &lights, const vector<Triangle> &triangles, vec3 incidentRay) {
 	float Kdiffuse = 0.8f;
 	float Kspecular = 0.5f;
 	glm::vec3 lightIntensity(0.0f, 0.0f, 0.0f);
