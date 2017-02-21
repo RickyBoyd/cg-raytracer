@@ -2,6 +2,7 @@
 #include <glm/detail/type_vec3.hpp>
 #include <vector>
 #include <memory>
+#include <string>
 
 enum IlluminationModel
 {
@@ -28,12 +29,13 @@ public:
 	float specular_exponent_ = 50.0f;
 	float transparency_ = 0.0f;
 	IlluminationModel illumination_model_;
+	float refractive_index_ = 1.0f;
 
 	Material();
 	Material(std::string name, glm::vec3 ambient_colour, glm::vec3 diffuse_colour, glm::vec3 specular_colour, float specular_exponent, float transparency);
 	~Material();
 
-	static std::vector<std::shared_ptr<Material>> LoadMaterials(std::string filename);
+	static std::vector<std::shared_ptr<Material> > LoadMaterials(std::string filename);
 	static std::vector<std::string> SplitString(const std::string& str, const std::string& regex);
 };
 

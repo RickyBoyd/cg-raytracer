@@ -4,7 +4,7 @@
 #include <fstream>
 #include <string>
 #include <regex>
-#include "TestModel.h"
+#include "Triangle.h"
 #include "Material.h"
 #include "Face.h"
 

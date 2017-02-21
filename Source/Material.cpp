@@ -67,6 +67,10 @@ std::vector<std::shared_ptr<Material>> Material::LoadMaterials(std::string filen
 		{
 			material->illumination_model_ = static_cast<IlluminationModel>(std::stoi(tokens[1]));
 		}
+		else if (tokens[0].compare("Ni") == 0)
+		{
+			material->refractive_index_ = std::stof(tokens[1]);
+		}
 	}
 
 	if (material != nullptr)

@@ -2,7 +2,7 @@
 
 
 
-Face::Face(std::vector<glm::vec3> vertices, std::optional<std::vector<glm::vec2>> texture_coords, std::optional<glm::vec3> normal, Material material)
+Face::Face(std::vector<glm::vec3> vertices, std::shared_ptr<std::vector<glm::vec2>> texture_coords, std::shared_ptr<glm::vec3> normal, Material material)
 	: vertices_(vertices), texture_coords_(texture_coords), normal_(normal), material_(material)
 {
 }
@@ -19,13 +19,15 @@ Face::~Face()
 
 Triangle Face::ToTriangle(glm::vec3 transform)
 {
-	if (normal_.has_value()) {
+	if (normal_ != nullptr) {
 		return Triangle(
 			vertices_[0] + transform,
 			vertices_[1] + transform,
 			vertices_[2] + transform,
 			material_.ambient_colour_,
-			normal_.value());
+			*normal_, 
+			material_.transparency_,
+			material_.refractive_index_);
 	}
 	else
 	{
@@ -33,6 +35,8 @@ Triangle Face::ToTriangle(glm::vec3 transform)
 			vertices_[0] + transform,
 			vertices_[0] + transform,
 			vertices_[0] + transform,
-			material_.ambient_colour_);
+			material_.ambient_colour_,
+			material_.transparency_,
+			material_.refractive_index_);
 	}
 }

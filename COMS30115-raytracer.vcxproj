@@ -146,7 +146,7 @@
     <ClCompile Include="source\raytracer.cpp" />
     <ClCompile Include="Source\Scene.cpp" />
     <ClCompile Include="Source\SDLauxiliary.cpp" />
-    <ClCompile Include="Source\TestModel.cpp" />
+    <ClCompile Include="Source\Triangle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Camera.h" />
@@ -157,7 +157,7 @@
     <ClInclude Include="source\raytracer.h" />
     <ClInclude Include="Source\Scene.h" />
     <ClInclude Include="source\SDLauxiliary.h" />
-    <ClInclude Include="source\TestModel.h" />
+    <ClInclude Include="source\Triangle.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
