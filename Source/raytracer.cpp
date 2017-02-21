@@ -88,13 +88,14 @@ int main(int argc, char *argv[]) {
 		std::vector<Light> { Light{ vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
 		Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
 
+	/*
 	auto bunnyScene = Scene(
 		std::vector<ModelInstance> { ModelInstance(Model("Resources/bunny.obj"), glm::vec3(0.0f, 0.0f, 0.0f)) },
 		std::vector<Light> {
 		Light{ vec3(0.0f, 0.5f, -1.0f), 15.0f * vec3(1,1,1) },
 			Light{ vec3(0.5f, 0.1f, 0.0f), 15.0f * vec3(1,1,1) }},
 		Camera{ glm::vec3(0.0f, 0.1f, -0.15f), 0.0f, 0.0f, 0.0f });
-	/*
+	
 	auto teapotScene = Scene(
 		std::vector<ModelInstance> {
 			ModelInstance(Model("Resources/teapot.obj"), glm::vec3(-3.0f, 0.0f, 0.0f)),
@@ -297,7 +298,7 @@ vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, const vector<T
 		return vec3(0.0f, 0.0f, 0.0f);
 	}
 	Triangle triangle = triangles[maybeIntersection.triangleIndex];
-	if ((triangle.transparency_ > 0) && depth <= RAY_DEPTH)  //NEED TO OBTAIN TRANPARENCY AND REFLECTIVITY SOMEHOW
+	if (triangle.transparency_ > 0.001f && depth <= RAY_DEPTH)
 	{
 		vec3 normal = triangles[maybeIntersection.triangleIndex].normal;
 		float c;
