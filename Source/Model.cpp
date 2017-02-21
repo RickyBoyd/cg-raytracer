@@ -28,7 +28,7 @@ Model::Model(std::string filename)
 			std::vector<std::string> vertex3 = SplitString(tokens[3], "/");
 
 			std::vector<glm::vec3> vertices{};
-			auto texture_coords = std::experimental::optional<std::vector<glm::vec2>>{};
+			auto texture_coords = std::vector<glm::vec2>{};
 			glm::vec3 normal;
 
 			// If vertex coordinates have first part, retrieve the vertices for the face
@@ -73,7 +73,7 @@ Model::Model(std::string filename)
 				normal = glm::normalize(glm::cross(e2, e1));
 			}
 
-			auto face = Face(vertices, texture_coords, std::make_optional(normal), material);
+			auto face = Face(vertices, std::make_shared<std::vector<glm::vec2>>(texture_coords), std::make_shared<glm::vec3>(normal), material);
 			faces_.push_back(std::make_shared<Face>(face));
 		}
 		else if (tokens[0].compare("vn") == 0)
