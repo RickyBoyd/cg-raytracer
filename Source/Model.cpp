@@ -107,13 +107,13 @@ std::vector<std::string> Model::SplitString(const std::string& str, const std::s
 	return std::vector<std::string>(first, last);
 }
 
-std::vector<Triangle> Model::ToTriangles(const glm::vec3 transform) const
+std::vector<Triangle> Model::ToTriangles(const glm::vec3 transform, const glm::vec3 scale) const
 {
 	std::vector<Triangle> tris;
 	tris.reserve(faces_.size());
 	for (auto face : faces_)
 	{
-		tris.push_back(face->ToTriangle(transform));
+		tris.push_back(face->ToTriangle(transform, scale));
 	}
 	return tris;
 }

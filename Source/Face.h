@@ -14,6 +14,6 @@ public:
 	Face(const Face& face);
 	~Face();
 
-	Triangle ToTriangle(glm::vec3 transform);
+	Triangle ToTriangle(glm::vec3 transform, glm::vec3 scale);
 };
 

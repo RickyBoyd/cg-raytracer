@@ -5,14 +5,14 @@
 
 struct ModelInstance
 {
-	ModelInstance(const Model& model, const glm::vec3& transform)
-		: model(model),
-		  transform(transform)
+	ModelInstance(const Model& model, const glm::vec3 transform = glm::vec3(0.0f, 0.0f, 0.0f), const glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f))
+		: model(model), transform(transform), scale_(scale)
 	{
 	}
 
 	Model model;
 	glm::vec3 transform;
+	glm::vec3 scale_;
 };
 
 class Scene

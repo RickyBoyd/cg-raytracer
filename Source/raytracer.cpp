@@ -41,8 +41,8 @@ struct Intersection {
 /* ----------------------------------------------------------------------------*/
 /* GLOBAL VARIABLES                                                            */
 
-const int SCREEN_WIDTH = 300;
-const int SCREEN_HEIGHT = 300;
+const int SCREEN_WIDTH = 500;
+const int SCREEN_HEIGHT = 500;
 const int AA_SAMPLES = 4;
 const glm::vec2 JITTER_MATRIX[AA_SAMPLES] = { glm::vec2(-0.25, 0.75), glm::vec2(0.75, 0.25), glm::vec2(-0.75, -0.25), glm::vec2(0.25, -0.75) };
 SDL_Surface *screen;
@@ -84,17 +84,25 @@ int main(int argc, char *argv[]) {
 	Uint8 lightSelected = 0;
 
 	auto cubeScene = Scene(
-		std::vector<ModelInstance> { ModelInstance(Model("Resources/cube.obj"), glm::vec3(0.0f, 0.0f, 0.0f)) },
+		std::vector<ModelInstance> { ModelInstance(Model("Resources/cube.obj")) },
 		std::vector<Light> { Light{ vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
 		Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
 
 	auto cornellBoxScene = Scene(
-		std::vector<ModelInstance> { ModelInstance(Model("Resources/cornell_box.obj"), glm::vec3(0.0f, 0.0f, 0.0f)) },
+		std::vector<ModelInstance> { ModelInstance(Model("Resources/cornell_box.obj")) },
 		std::vector<Light> { Light { vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
 		Camera { glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
 
 	auto cornellBoxTransparentScene = Scene(
-		std::vector<ModelInstance> { ModelInstance(Model("Resources/cornell_box_transparency.obj"), glm::vec3(0.0f, 0.0f, 0.0f)) },
+		std::vector<ModelInstance> { ModelInstance(Model("Resources/cornell_box_transparency.obj")) },
+		std::vector<Light> { Light{ vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
+		Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
+
+	auto bunnyBoxScene = Scene(
+		std::vector<ModelInstance> { 
+			ModelInstance(Model("Resources/cornell_box_empty.obj")),
+			ModelInstance(Model("Resources/bunny_transparent.obj"), glm::vec3(0.0f, -1.5f, 0.0f), glm::vec3(12.0f, 12.0f, 12.0f)) 
+		},
 		std::vector<Light> { Light{ vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
 		Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
 
@@ -118,7 +126,7 @@ int main(int argc, char *argv[]) {
 		Camera{ glm::vec3(0.0f, 4.0f, -7.0f), 30.0f, 0.0f, 0.0f });
 #endif
 
-	Scene &scene = cornellBoxTransparentScene;
+	Scene &scene = bunnyBoxScene;
 
 	std::vector<Triangle> sceneTris = scene.ToTriangles();
 	cout << "Loaded " << sceneTris.size() << " tris" << endl;

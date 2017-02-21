@@ -17,13 +17,13 @@ Face::~Face()
 {
 }
 
-Triangle Face::ToTriangle(glm::vec3 transform)
+Triangle Face::ToTriangle(glm::vec3 transform, glm::vec3 scale)
 {
 	if (normal_ != nullptr) {
 		return Triangle(
-			vertices_[0] + transform,
-			vertices_[1] + transform,
-			vertices_[2] + transform,
+			vertices_[0] * scale + transform,
+			vertices_[1] * scale + transform,
+			vertices_[2] * scale + transform,
 			material_.ambient_colour_,
 			*normal_, 
 			material_.transparency_,
@@ -32,9 +32,9 @@ Triangle Face::ToTriangle(glm::vec3 transform)
 	else
 	{
 		return Triangle(
-			vertices_[0] + transform,
-			vertices_[0] + transform,
-			vertices_[0] + transform,
+			vertices_[0] * scale + transform,
+			vertices_[0] * scale + transform,
+			vertices_[0] * scale + transform,
 			material_.ambient_colour_,
 			material_.transparency_,
 			material_.refractive_index_);
