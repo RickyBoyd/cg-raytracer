@@ -5,8 +5,8 @@
 
 Material::Material() {}
 
-Material::Material(std::string name, glm::vec3 ambient_colour, glm::vec3 diffuse_colour, glm::vec3 specular_colour, float specular_exponent, float transparency)
-	: name_(name), ambient_colour_(ambient_colour), diffuse_colour_(diffuse_colour), specular_colour_(specular_colour), specular_exponent_(specular_exponent), transparency_(transparency)
+Material::Material(std::string name, glm::vec3 ambient_colour, glm::vec3 diffuse_colour, glm::vec3 specular_colour, float specular_exponent, float reflectivity)
+	: name_(name), ambient_colour_(ambient_colour), diffuse_colour_(diffuse_colour), specular_colour_(specular_colour), specular_exponent_(specular_exponent), reflectivity_(reflectivity)
 {
 }
 
@@ -70,6 +70,10 @@ std::vector<std::shared_ptr<Material>> Material::LoadMaterials(std::string filen
 		else if (tokens[0].compare("Ni") == 0)
 		{
 			material->refractive_index_ = std::stof(tokens[1]);
+		}
+		else if (tokens[0].compare("Re") == 0)
+		{
+			material->reflectivity_ = std::stof(tokens[1]);
 		}
 	}
 

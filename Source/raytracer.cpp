@@ -98,13 +98,13 @@ int main(int argc, char *argv[]) {
 		std::vector<Light> { Light{ vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
 		Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
 
-	auto bunnyBoxScene = Scene(
-		std::vector<ModelInstance> { 
-			ModelInstance(Model("Resources/cornell_box_empty.obj")),
-			ModelInstance(Model("Resources/bunny_transparent.obj"), glm::vec3(0.0f, -1.5f, 0.0f), glm::vec3(12.0f, 12.0f, 12.0f)) 
-		},
-		std::vector<Light> { Light{ vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
-		Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
+	// auto bunnyBoxScene = Scene(
+	// 	std::vector<ModelInstance> { 
+	// 		ModelInstance(Model("Resources/cornell_box_empty.obj")),
+	// 		ModelInstance(Model("Resources/bunny_transparent.obj"), glm::vec3(0.0f, -1.5f, 0.0f), glm::vec3(12.0f, 12.0f, 12.0f)) 
+	// 	},
+	// 	std::vector<Light> { Light{ vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
+	// 	Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
 
 #ifdef IMPORT_COMPLEX_MODELS
 	auto bunnyScene = Scene(
@@ -126,20 +126,11 @@ int main(int argc, char *argv[]) {
 		Camera{ glm::vec3(0.0f, 4.0f, -7.0f), 30.0f, 0.0f, 0.0f });
 #endif
 
-	Scene &scene = bunnyBoxScene;
+	Scene &scene = cornellBoxTransparentScene;
 
 	std::vector<Triangle> sceneTris = scene.ToTriangles();
 	cout << "Loaded " << sceneTris.size() << " tris" << endl;
 
-	// <<<<<<< HEAD
-	// 	vec3 cameraPos(-0.2f, -0.2f, -2.0f);
-	// 	vec3 pitchYawRoll = vec3(0.0f, 0.0f, 0.0f);
-
-	// 	vector<Light> lights;
-	// 	AddLight(vec3(-0.3f, 0.2f, -0.7f), 15.0f * vec3(1, 1, 1), lights);
-
-	// =======
-	// >>>>>>> master
 	while (NoQuitMessageSDL()) {
 		Draw(scene, sceneTris);
 		Update(scene, lightSelected);
@@ -317,7 +308,7 @@ vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, const vector<T
 		return vec3(0.0f, 0.0f, 0.0f);
 	}
 	Triangle triangle = triangles[maybeIntersection.triangleIndex];
-	if (triangle.transparency_ > 0.001f && depth <= RAY_DEPTH)
+	if (triangle.refractive_index_ > 0.001f && depth <= RAY_DEPTH)
 	{
 		vec3 normal = triangles[maybeIntersection.triangleIndex].normal;
 		float c;
@@ -334,8 +325,6 @@ vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, const vector<T
 		bool inside = glm::dot(incidentRay, normal) < 0;
 		if (glm::dot(incidentRay, normal) < 0)
 		{
-			//bool refractionOccurs = Refract( incidentRay, normal, refractiveIndex, refractionRay);
-
 			refractionRay = glm::refract(incidentRay, normal, refractiveIndex);
 
 			c = -1.0f*glm::dot(incidentRay, normal);
@@ -355,41 +344,26 @@ vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, const vector<T
 			}
 			//c = -1.0f*glm::dot( incidentRay,  normal);
 		}
-		//float R;
-		//Fresnel(incidentRay, normal, refractiveIndex, R) ;
 		float R = Fresnel(c, refractiveIndex);
 		vec3 refractionColor = Trace(maybeIntersection.position, refractionRay, lights, triangles, maybeIntersection.triangleIndex, depth + 1);
 		return (1.0f - R)*refractionColor + R*reflectionColor;
+	} else if (triangle.reflectivity_ > 0.001f && depth <= RAY_DEPTH)
+	{
+		vec3 normal = triangles[maybeIntersection.triangleIndex].normal;
+
+		vec3 refractionRay(0.0f, 0.0f, 0.0f);
+		normal = glm::normalize(normal);
+		incidentRay = glm::normalize(incidentRay);
+
+		vec3 reflectionRay = glm::reflect(incidentRay, normal);
+		vec3 reflectionColor = Trace(maybeIntersection.position, reflectionRay, lights, triangles, maybeIntersection.triangleIndex, depth + 1);
+		return reflectionColor;
 	}
 	else
 	{
 		return SurfaceColour(maybeIntersection, lights, triangles, incidentRay);
 	}
 }
-
-// void Fresnel(const vec3 &I, const vec3 &N, const float &ior, float &kr) 
-// { 
-//     float cosi = glm::dot(N, I); 
-//     cosi = cosi > 1.0f ? 1.0f : cosi;
-//   	cosi = cosi < -1.0f ? -1.0f : cosi;
-//     float etai = 1, etat = ior; 
-//     if (cosi > 0) { std::swap(etai, etat); } 
-//     // Compute sini using Snell's law
-//     float sint = etai / etat * sqrtf(std::max(0.f, 1 - cosi * cosi)); 
-//     // Total internal reflection
-//     if (sint >= 1) { 
-//         kr = 1; 
-//     } 
-//     else { 
-//         float cost = sqrtf(std::max(0.f, 1 - sint * sint)); 
-//         cosi = fabsf(cosi); 
-//         float Rs = ((etat * cosi) - (etai * cost)) / ((etat * cosi) + (etai * cost)); 
-//         float Rp = ((etai * cosi) - (etat * cost)) / ((etai * cosi) + (etat * cost)); 
-//         kr = (Rs * Rs + Rp * Rp) / 2; 
-//     } 
-//     // As a consequence of the conservation of energy, transmittance is given by:
-//     // kt = 1 - kr;
-// }
 
 float Fresnel(float c, float n)
 {
@@ -467,7 +441,7 @@ vec3 DirectLight(const Intersection &intersection, vector<Light> &lights, const 
 		// If an intersection was found, and it is between the intersection and the light, this light does not reach the intersection
 		if (hasIntersection) {
 			float shadowRayIntersectionDistance = glm::length(intersection.position - shadowRayIntersection.position);
-			if (shadowRayIntersectionDistance <= lightDistance && (triangles[shadowRayIntersection.triangleIndex].transparency_ <= 0))
+			if (shadowRayIntersectionDistance <= lightDistance && (triangles[shadowRayIntersection.triangleIndex].refractive_index_ <= 0))
 				continue; //this needs some revisiting
 		}
 
@@ -486,16 +460,6 @@ vec3 DirectLight(const Intersection &intersection, vector<Light> &lights, const 
 	return lightIntensity * Kdiffuse + specularIntensity * Kspecular;
 }
 
-/** @brief Decides if ray is refracted or totally internally reflected,
- *         if refracted puts the direction of the refracted ray into t
- *
- *  @param d      The incident ray.
- *  @param normal The normal of the intersected surface
- *  @param n      The refractive index of the material the incident ray is coming from.
- *  @param nt     The refractive index of the material the ray is entering.
- *  @param t      The direction of the refracted ray.
- *  @return bool  Does ray refract.
- */
 bool Refract(vec3 d, vec3 normal, float n, vec3 &t)
 {
 	float cosi = glm::dot(normal, d);
@@ -505,12 +469,6 @@ bool Refract(vec3 d, vec3 normal, float n, vec3 &t)
 	t = glm::normalize(t);
 	return true;
 }
-
-
-// float cosi = -nhit.dot(raydir); 
-// float temp = 1 - eta * eta * (1 - cosi * cosi); 
-// Vec3f refrdir = raydir * eta + nhit * (eta *  cosi - sqrt(k)); 
-// t = glm::normalize(t); 
 
 vec3 Reflect(vec3 d, vec3 normal)
 {

@@ -26,7 +26,7 @@ Triangle Face::ToTriangle(glm::vec3 transform, glm::vec3 scale)
 			vertices_[2] * scale + transform,
 			material_.ambient_colour_,
 			*normal_, 
-			material_.transparency_,
+			material_.reflectivity_,
 			material_.refractive_index_);
 	}
 	else
@@ -36,7 +36,7 @@ Triangle Face::ToTriangle(glm::vec3 transform, glm::vec3 scale)
 			vertices_[0] * scale + transform,
 			vertices_[0] * scale + transform,
 			material_.ambient_colour_,
-			material_.transparency_,
+			material_.reflectivity_,
 			material_.refractive_index_);
 	}
 }

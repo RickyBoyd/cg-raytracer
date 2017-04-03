@@ -1,13 +1,13 @@
 #include "Triangle.h"
 
-Triangle::Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 color, float transparency = 0.0f, float refractive_index = 1.0f)
-	: v0(v0), v1(v1), v2(v2), color(color), transparency_(transparency), refractive_index_(refractive_index)
+Triangle::Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 color, float reflectivity = 0.0f, float refractive_index = 1.0f)
+	: v0(v0), v1(v1), v2(v2), color(color), reflectivity_(reflectivity), refractive_index_(refractive_index)
 {
 	ComputeNormal();
 }
 
-Triangle::Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 color, glm::vec3 normal, float transparency = 0.0f, float refractive_index = 1.0f)
-	: v0(v0), v1(v1), v2(v2), normal(normal), color(color), transparency_(transparency), refractive_index_(refractive_index)
+Triangle::Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 color, glm::vec3 normal, float reflectivity = 0.0f, float refractive_index = 1.0f)
+	: v0(v0), v1(v1), v2(v2), normal(normal), color(color), reflectivity_(reflectivity), refractive_index_(refractive_index)
 {
 }
 
