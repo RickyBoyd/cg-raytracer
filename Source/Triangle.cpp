@@ -50,7 +50,7 @@ void Triangle::Intersect(glm::vec3 start, glm::vec3 dir, Intersection &intersect
 	if (t > 0 && t < intersection.distance) {
 		intersection.position = v0 + u * e1 + v * e2;
 		intersection.distance = t;
-		intersection.triangleIndex = i;
+		intersection.index = i;
 		intersection.normal = normal;
 	}
 }

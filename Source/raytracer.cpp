@@ -17,7 +17,7 @@
 #include "Material.h"
 
 #define EDGE_AA
-#define RAY_DEPTH 4
+#define RAY_DEPTH 8
 
 #if defined _WIN32 || defined _WIN64
 extern "C" {
@@ -53,10 +53,9 @@ void Draw(Scene &scene, const vector<Primitive*> &primitives);
 
 void Interpolate(float a, float b, vector<float> &result);
 
-bool ClosestIntersection(vec3 start, vec3 dir, const vector<Primitive*> &primitives, int currentTriangleIndex,
-	Intersection &closestIntersection);
+bool ClosestIntersection(vec3 start, vec3 dir, const vector<Primitive*> &primitives, Intersection &closestIntersection);
 
-vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, const vector<Primitive*> &primitives, int triangleIndex, int depth);
+vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, const vector<Primitive*> &primitives, int depth);
 
 float Fresnel(float c, float n);
 //void Fresnel(const vec3 &I, const vec3 &N, const float &ior, float &kr) ;
@@ -121,7 +120,7 @@ int main(int argc, char *argv[]) {
 		Camera{ glm::vec3(0.0f, 4.0f, -7.0f), 30.0f, 0.0f, 0.0f });
 #endif
 
-	Scene &scene = cornellBoxScene;
+	Scene &scene = cornellBoxTransparentScene;
 
 	std::vector<Primitive*> scenePrimitives = scene.ToPrimitives();
 	cout << "Loaded " << scenePrimitives.size() << " primtives" << endl;
@@ -272,13 +271,13 @@ void Draw(Scene &scene, const vector<Primitive*> &primitives) {
 
 				//if (!alreadySampled)
 				//{
-				vec3 triangleColour = Trace(scene.camera_.position, d, scene.lights_, primitives, primitives.size(), 0);
+				vec3 triangleColour = Trace(scene.camera_.position, d, scene.lights_, primitives, 0);
 				colour += triangleColour;
 				//sampleTriangleIndices[sample] = maybeIntersection.triangleIndex;
 				sampleTriangleColours[sample] = triangleColour;
 				//}
 #else
-				colour += Trace(cameraPos, d, lights, primitives.size(), 0);
+				colour += Trace(cameraPos, d, lights, 0);
 #endif
 
 			}
@@ -292,17 +291,17 @@ void Draw(Scene &scene, const vector<Primitive*> &primitives) {
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
 
-vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, const vector<Primitive*> &primitives, int triangleIndex, int depth)
+vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, const vector<Primitive*> &primitives, int depth)
 {
 	// Find an intersection of this ray with the model, if exists
 	float bias = 1e-3;
 	Intersection maybeIntersection;
-	bool hasIntersection = ClosestIntersection(startPos, incidentRay, primitives, triangleIndex, maybeIntersection);
+	bool hasIntersection = ClosestIntersection(startPos, incidentRay, primitives, maybeIntersection);
 	if (!hasIntersection)
 	{
 		return vec3(0.0f, 0.0f, 0.0f);
 	}
-	Primitive* primitive = primitives[maybeIntersection.triangleIndex];
+	Primitive* primitive = primitives[maybeIntersection.index];
 	if (primitive->refractive_index_ > 0.001f && depth <= RAY_DEPTH)
 	{
 		vec3 normal = maybeIntersection.normal;
@@ -313,8 +312,8 @@ vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, const vector<P
 		normal = glm::normalize(normal);
 		incidentRay = glm::normalize(incidentRay);
 
-		vec3 reflectionRay = glm::reflect(incidentRay, normal);
-		vec3 reflectionColor = Trace(maybeIntersection.position, reflectionRay, lights, primitives, maybeIntersection.triangleIndex, depth + 1);
+		vec3 reflectionRay;
+		vec3 reflectionColor;
 
 		vec3 zero(0.0f, 0.0f, 0.0f);
 		bool inside = glm::dot(incidentRay, normal) < 0;
@@ -322,11 +321,18 @@ vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, const vector<P
 		{
 			refractionRay = glm::refract(incidentRay, normal, refractiveIndex);
 
+			reflectionRay = glm::reflect(incidentRay, normal);
+			reflectionColor = Trace(maybeIntersection.position + normal*bias, reflectionRay, lights, primitives, depth + 1);
+
 			c = -1.0f*glm::dot(incidentRay, normal);
+			normal = -1.0f*normal;
 		}
 		else
 		{
 			//bool refractionOccurs = Refract( incidentRay, -1.0f*normal, 1.0f/refractiveIndex, refractionRay);
+
+			reflectionRay = glm::reflect(incidentRay, -1.0f*normal);
+			reflectionColor = Trace(maybeIntersection.position -1.0f*normal*bias, reflectionRay, lights, primitives, depth + 1);
 			refractionRay = glm::refract(incidentRay, -1.0f*normal, 1.0f / refractiveIndex);
 
 			if (zero != refractionRay)
@@ -340,7 +346,7 @@ vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, const vector<P
 			//c = -1.0f*glm::dot( incidentRay,  normal);
 		}
 		float R = Fresnel(c, refractiveIndex);
-		vec3 refractionColor = Trace(maybeIntersection.position, refractionRay, lights, primitives, maybeIntersection.triangleIndex, depth + 1);
+		vec3 refractionColor = Trace(maybeIntersection.position + normal*bias, refractionRay, lights, primitives, depth + 1);
 		return (1.0f - R)*refractionColor + R*reflectionColor;
 	} else if (primitive->reflectivity_ > 0.001f && depth <= RAY_DEPTH)
 	{
@@ -351,7 +357,7 @@ vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, const vector<P
 		incidentRay = glm::normalize(incidentRay);
 
 		vec3 reflectionRay = glm::reflect(incidentRay, normal);
-		vec3 reflectionColor = Trace(maybeIntersection.position, reflectionRay, lights, primitives, maybeIntersection.triangleIndex, depth + 1);
+		vec3 reflectionColor = Trace(maybeIntersection.position, reflectionRay, lights, primitives, depth + 1);
 		return reflectionColor;
 	}
 	else
@@ -370,14 +376,13 @@ float Fresnel(float c, float n)
 }
 
 /// <summary>Find the triangle intersected first by the ray from start in direction dir.</summary>
-bool ClosestIntersection(vec3 start, vec3 dir, const vector<Primitive*> &primitives, int currentTriangleIndex, Intersection &closestIntersection) {
+bool ClosestIntersection(vec3 start, vec3 dir, const vector<Primitive*> &primitives, Intersection &closestIntersection) {
 	// Initialise the closest intersection to infinitely far away
 	closestIntersection.distance = std::numeric_limits<float>::max();
 
 	// Check each triangle for an intersection using the Moller-Trumbore algorithm
 	// TODO: optimise this process using bounding boxes
 	for (int i = 0; i < primitives.size(); i++) {
-		if(i == currentTriangleIndex) continue;
 		primitives[i]->Intersect(start, dir, closestIntersection, i);
 	}
 	return closestIntersection.distance != std::numeric_limits<float>::max();
@@ -422,7 +427,7 @@ bool ClosestIntersection(vec3 start, vec3 dir, const vector<Primitive*> &primiti
 
 vec3 SurfaceColour(const Intersection &i, vector<Light> &lights, const vector<Primitive*> &primitives, vec3 incidentRay)
 {
-	return primitives[i.triangleIndex]->color * (DirectLight(i, lights, primitives, incidentRay) + IndirectLight());
+	return primitives[i.index]->color * (DirectLight(i, lights, primitives, incidentRay) + IndirectLight());
 }
 
 vec3 IndirectLight()
@@ -434,6 +439,7 @@ vec3 IndirectLight()
 vec3 DirectLight(const Intersection &intersection, vector<Light> &lights, const vector<Primitive*> &primitives, vec3 incidentRay) {
 	float Kdiffuse = 0.8f;
 	float Kspecular = 0.5f;
+	float bias = 1e-3;
 	glm::vec3 lightIntensity(0.0f, 0.0f, 0.0f);
 	glm::vec3 specularIntensity(0.0f, 0.0f, 0.0f);
 	for (auto light : lights) {
@@ -442,12 +448,12 @@ vec3 DirectLight(const Intersection &intersection, vector<Light> &lights, const 
 		vec3 shadowRay = light.position - intersection.position;
 		float lightDistance = glm::length(shadowRay);
 		Intersection shadowRayIntersection;
-		bool hasIntersection = ClosestIntersection(intersection.position, shadowRay, primitives, intersection.triangleIndex, shadowRayIntersection);
+		bool hasIntersection = ClosestIntersection(intersection.position + intersection.normal * bias, shadowRay, primitives, shadowRayIntersection);
 
 		// If an intersection was found, and it is between the intersection and the light, this light does not reach the intersection
 		if (hasIntersection) {
 			float shadowRayIntersectionDistance = glm::length(intersection.position - shadowRayIntersection.position);
-			if (shadowRayIntersectionDistance <= lightDistance && (primitives[shadowRayIntersection.triangleIndex]->refractive_index_ <= 0))
+			if (shadowRayIntersectionDistance <= lightDistance && (primitives[shadowRayIntersection.index]->refractive_index_ <= 0))
 				continue; //this needs some revisiting
 		}
 

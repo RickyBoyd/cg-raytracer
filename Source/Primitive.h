@@ -5,7 +5,7 @@ struct Intersection
 {
 	glm::vec3 position;
 	float distance;
-	int triangleIndex;
+	int index;
 	glm::vec3 normal;
 };
 
