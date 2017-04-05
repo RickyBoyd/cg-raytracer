@@ -12,14 +12,14 @@ Scene::~Scene()
 {
 }
 
-std::vector<Triangle> Scene::ToTriangles() const
+std::vector<Primitive*> Scene::ToPrimitives() const
 {
-	std::vector<Triangle> scene_tris;
+	std::vector<Primitive*> scene_prims;
 	for (auto model_instance : model_instances_)
 	{
-		auto model_tris = model_instance.model.ToTriangles(model_instance.transform, model_instance.scale_);
-		scene_tris.insert(scene_tris.end(), model_tris.begin(), model_tris.end());
+		auto model_prims = model_instance.model.ToPrimitives(model_instance.transform, model_instance.scale_);
+		scene_prims.insert(scene_prims.end(), model_prims.begin(), model_prims.end());
 	}
 
-	return scene_tris;
+	return scene_prims;
 }

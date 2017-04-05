@@ -14,6 +14,6 @@ public:
 	Face(const Face& face);
 	~Face();
 
-	Triangle ToTriangle(glm::vec3 transform, glm::vec3 scale);
+	Primitive* ToPrimitive(glm::vec3 transform, glm::vec3 scale);
 };
 

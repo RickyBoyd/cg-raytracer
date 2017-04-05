@@ -17,10 +17,11 @@ Face::~Face()
 {
 }
 
-Triangle Face::ToTriangle(glm::vec3 transform, glm::vec3 scale)
+Primitive* Face::ToPrimitive(glm::vec3 transform, glm::vec3 scale)
 {
+	Primitive *primitive;
 	if (normal_ != nullptr) {
-		return Triangle(
+		primitive = new Triangle(
 			vertices_[0] * scale + transform,
 			vertices_[1] * scale + transform,
 			vertices_[2] * scale + transform,
@@ -31,7 +32,7 @@ Triangle Face::ToTriangle(glm::vec3 transform, glm::vec3 scale)
 	}
 	else
 	{
-		return Triangle(
+		primitive = new Triangle(
 			vertices_[0] * scale + transform,
 			vertices_[0] * scale + transform,
 			vertices_[0] * scale + transform,
@@ -39,4 +40,5 @@ Triangle Face::ToTriangle(glm::vec3 transform, glm::vec3 scale)
 			material_.reflectivity_,
 			material_.refractive_index_);
 	}
+	return primitive;
 }

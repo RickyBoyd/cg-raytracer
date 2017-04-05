@@ -25,6 +25,6 @@ public:
 	Scene(std::vector<ModelInstance> model_instances, std::vector<Light> lights_, Camera camera);
 	~Scene();
 
-	std::vector<Triangle> ToTriangles() const;
+	std::vector<Primitive*> ToPrimitives() const;
 };
 

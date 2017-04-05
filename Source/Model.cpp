@@ -76,6 +76,10 @@ Model::Model(std::string filename)
 			auto face = Face(vertices, std::make_shared<std::vector<glm::vec2>>(texture_coords), std::make_shared<glm::vec3>(normal), material);
 			faces_.push_back(std::make_shared<Face>(face));
 		}
+		// else if (tokens[0].compare("f") == 0)
+		// {
+
+		// }
 		else if (tokens[0].compare("vn") == 0)
 		{
 			auto normal = glm::vec3(std::stof(tokens[1]), std::stof(tokens[2]), std::stof(tokens[3]));
@@ -107,13 +111,13 @@ std::vector<std::string> Model::SplitString(const std::string& str, const std::s
 	return std::vector<std::string>(first, last);
 }
 
-std::vector<Triangle> Model::ToTriangles(const glm::vec3 transform, const glm::vec3 scale) const
+std::vector<Primitive*> Model::ToPrimitives(const glm::vec3 transform, const glm::vec3 scale) const
 {
-	std::vector<Triangle> tris;
-	tris.reserve(faces_.size());
+	std::vector<Primitive*> prims;
+	prims.reserve(faces_.size());
 	for (auto face : faces_)
 	{
-		tris.push_back(face->ToTriangle(transform, scale));
+		prims.push_back(face->ToPrimitive(transform, scale));
 	}
-	return tris;
+	return prims;
 }

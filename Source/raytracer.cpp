@@ -4,6 +4,7 @@
 #include <SDL.h>
 #include "SDLauxiliary.h"
 #include "Triangle.h"
+#include "Primitive.h"
 #include <limits>
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -32,12 +33,6 @@ using namespace std;
 using glm::vec3;
 using glm::mat3;
 
-struct Intersection {
-	vec3 position;
-	float distance;
-	int triangleIndex;
-};
-
 /* ----------------------------------------------------------------------------*/
 /* GLOBAL VARIABLES                                                            */
 
@@ -54,22 +49,22 @@ const float FOCAL_LENGTH = SCREEN_WIDTH / 2;
 
 void Update(Scene &scene, Uint8 &lightSelected);
 
-void Draw(Scene &scene, const vector<Triangle> &triangles);
+void Draw(Scene &scene, const vector<Primitive*> &primitives);
 
 void Interpolate(float a, float b, vector<float> &result);
 
-bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles, int currentTriangleIndex,
+bool ClosestIntersection(vec3 start, vec3 dir, const vector<Primitive*> &primitives, int currentTriangleIndex,
 	Intersection &closestIntersection);
 
-vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, const vector<Triangle> &triangles, int triangleIndex, int depth);
+vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, const vector<Primitive*> &primitives, int triangleIndex, int depth);
 
 float Fresnel(float c, float n);
 //void Fresnel(const vec3 &I, const vec3 &N, const float &ior, float &kr) ;
-vec3 DirectLight(const Intersection &i, vector<Light> &lights, const vector<Triangle> &triangles, vec3 incidentRay);
+vec3 DirectLight(const Intersection &i, vector<Light> &lights, const vector<Primitive*> &primitives, vec3 incidentRay);
 
 vec3 IndirectLight();
 
-vec3 SurfaceColour(const Intersection &i, vector<Light> &lights, const vector<Triangle> &triangles, vec3 incidentRay);
+vec3 SurfaceColour(const Intersection &i, vector<Light> &lights, const vector<Primitive*> &primitives, vec3 incidentRay);
 
 void AddLight(vec3 pos, vec3 color, vector<Light> &lights);
 
@@ -126,13 +121,13 @@ int main(int argc, char *argv[]) {
 		Camera{ glm::vec3(0.0f, 4.0f, -7.0f), 30.0f, 0.0f, 0.0f });
 #endif
 
-	Scene &scene = cornellBoxTransparentScene;
+	Scene &scene = cornellBoxScene;
 
-	std::vector<Triangle> sceneTris = scene.ToTriangles();
-	cout << "Loaded " << sceneTris.size() << " tris" << endl;
+	std::vector<Primitive*> scenePrimitives = scene.ToPrimitives();
+	cout << "Loaded " << scenePrimitives.size() << " primtives" << endl;
 
 	while (NoQuitMessageSDL()) {
-		Draw(scene, sceneTris);
+		Draw(scene, scenePrimitives);
 		Update(scene, lightSelected);
 	}
 
@@ -233,7 +228,7 @@ void Update(Scene &scene, Uint8 &lightSelected) {
 	}
 }
 
-void Draw(Scene &scene, const vector<Triangle> &triangles) {
+void Draw(Scene &scene, const vector<Primitive*> &primitives) {
 	//SDL_FillRect( screen, 0, 0 );
 
 	if (SDL_MUSTLOCK(screen))
@@ -277,13 +272,13 @@ void Draw(Scene &scene, const vector<Triangle> &triangles) {
 
 				//if (!alreadySampled)
 				//{
-				vec3 triangleColour = Trace(scene.camera_.position, d, scene.lights_, triangles, triangles.size(), 0);
+				vec3 triangleColour = Trace(scene.camera_.position, d, scene.lights_, primitives, primitives.size(), 0);
 				colour += triangleColour;
 				//sampleTriangleIndices[sample] = maybeIntersection.triangleIndex;
 				sampleTriangleColours[sample] = triangleColour;
 				//}
 #else
-				colour += Trace(cameraPos, d, lights, triangles.size(), 0);
+				colour += Trace(cameraPos, d, lights, primitives.size(), 0);
 #endif
 
 			}
@@ -297,29 +292,29 @@ void Draw(Scene &scene, const vector<Triangle> &triangles) {
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
 
-vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, const vector<Triangle> &triangles, int triangleIndex, int depth)
+vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, const vector<Primitive*> &primitives, int triangleIndex, int depth)
 {
 	// Find an intersection of this ray with the model, if exists
 	float bias = 1e-3;
 	Intersection maybeIntersection;
-	bool hasIntersection = ClosestIntersection(startPos, incidentRay, triangles, triangleIndex, maybeIntersection);
+	bool hasIntersection = ClosestIntersection(startPos, incidentRay, primitives, triangleIndex, maybeIntersection);
 	if (!hasIntersection)
 	{
 		return vec3(0.0f, 0.0f, 0.0f);
 	}
-	Triangle triangle = triangles[maybeIntersection.triangleIndex];
-	if (triangle.refractive_index_ > 0.001f && depth <= RAY_DEPTH)
+	Primitive* primitive = primitives[maybeIntersection.triangleIndex];
+	if (primitive->refractive_index_ > 0.001f && depth <= RAY_DEPTH)
 	{
-		vec3 normal = triangles[maybeIntersection.triangleIndex].normal;
+		vec3 normal = maybeIntersection.normal;
 		float c;
-		float refractiveIndex = triangle.refractive_index_;
+		float refractiveIndex = primitive->refractive_index_;
 
 		vec3 refractionRay(0.0f, 0.0f, 0.0f);
 		normal = glm::normalize(normal);
 		incidentRay = glm::normalize(incidentRay);
 
 		vec3 reflectionRay = glm::reflect(incidentRay, normal);
-		vec3 reflectionColor = Trace(maybeIntersection.position, reflectionRay, lights, triangles, maybeIntersection.triangleIndex, depth + 1);
+		vec3 reflectionColor = Trace(maybeIntersection.position, reflectionRay, lights, primitives, maybeIntersection.triangleIndex, depth + 1);
 
 		vec3 zero(0.0f, 0.0f, 0.0f);
 		bool inside = glm::dot(incidentRay, normal) < 0;
@@ -345,23 +340,23 @@ vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, const vector<T
 			//c = -1.0f*glm::dot( incidentRay,  normal);
 		}
 		float R = Fresnel(c, refractiveIndex);
-		vec3 refractionColor = Trace(maybeIntersection.position, refractionRay, lights, triangles, maybeIntersection.triangleIndex, depth + 1);
+		vec3 refractionColor = Trace(maybeIntersection.position, refractionRay, lights, primitives, maybeIntersection.triangleIndex, depth + 1);
 		return (1.0f - R)*refractionColor + R*reflectionColor;
-	} else if (triangle.reflectivity_ > 0.001f && depth <= RAY_DEPTH)
+	} else if (primitive->reflectivity_ > 0.001f && depth <= RAY_DEPTH)
 	{
-		vec3 normal = triangles[maybeIntersection.triangleIndex].normal;
+		vec3 normal = maybeIntersection.normal;
 
 		vec3 refractionRay(0.0f, 0.0f, 0.0f);
 		normal = glm::normalize(normal);
 		incidentRay = glm::normalize(incidentRay);
 
 		vec3 reflectionRay = glm::reflect(incidentRay, normal);
-		vec3 reflectionColor = Trace(maybeIntersection.position, reflectionRay, lights, triangles, maybeIntersection.triangleIndex, depth + 1);
+		vec3 reflectionColor = Trace(maybeIntersection.position, reflectionRay, lights, primitives, maybeIntersection.triangleIndex, depth + 1);
 		return reflectionColor;
 	}
 	else
 	{
-		return SurfaceColour(maybeIntersection, lights, triangles, incidentRay);
+		return SurfaceColour(maybeIntersection, lights, primitives, incidentRay);
 	}
 }
 
@@ -375,48 +370,59 @@ float Fresnel(float c, float n)
 }
 
 /// <summary>Find the triangle intersected first by the ray from start in direction dir.</summary>
-bool ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles, int currentTriangleIndex, Intersection &closestIntersection) {
+bool ClosestIntersection(vec3 start, vec3 dir, const vector<Primitive*> &primitives, int currentTriangleIndex, Intersection &closestIntersection) {
 	// Initialise the closest intersection to infinitely far away
 	closestIntersection.distance = std::numeric_limits<float>::max();
 
 	// Check each triangle for an intersection using the Moller-Trumbore algorithm
 	// TODO: optimise this process using bounding boxes
-	for (int i = 0; i < triangles.size(); i++) {
-
-		if (i == currentTriangleIndex) continue;
-
-		Triangle triangle = triangles[i];
-		vec3 e1 = triangle.v1 - triangle.v0;
-		vec3 e2 = triangle.v2 - triangle.v0;
-		vec3 pvec = glm::cross(dir, e2);
-		float det = glm::dot(e1, pvec);
-
-		if (fabs(det) < 0.000000000001) continue;
-
-		float invDet = 1.0f / det;
-
-		vec3 tvec = start - triangle.v0;
-		float u = glm::dot(tvec, pvec) * invDet;
-		if (u < 0) continue;
-
-		vec3 qvec = glm::cross(tvec, e1);
-		float v = glm::dot(dir, qvec) * invDet;
-		if (v < 0 || u + v > 1) continue;
-
-		float t = glm::dot(e2, qvec) * invDet;
-
-		if (t > 0 && t < closestIntersection.distance) {
-			closestIntersection.position = triangle.v0 + u * e1 + v * e2;
-			closestIntersection.distance = t;
-			closestIntersection.triangleIndex = i;
-		}
+	for (int i = 0; i < primitives.size(); i++) {
+		if(i == currentTriangleIndex) continue;
+		primitives[i]->Intersect(start, dir, closestIntersection, i);
 	}
 	return closestIntersection.distance != std::numeric_limits<float>::max();
 }
 
-vec3 SurfaceColour(const Intersection &i, vector<Light> &lights, const vector<Triangle> &triangles, vec3 incidentRay)
+/// <summary>Find the triangle intersected first by the ray from start in direction dir.</summary>
+// bool ClosestIntersection(vec3 start, vec3 dir, const vector<Primitive*> &primitives, int currentTriangleIndex, Intersection &closestIntersection) {
+// 	// Initialise the closest intersection to infinitely far away
+// 	closestIntersection.distance = std::numeric_limits<float>::max();
+
+// 	// Check each triangle for an intersection using the Moller-Trumbore algorithm
+// 	// TODO: optimise this process using bounding boxes
+// 	for (int i = 0; i < primitives.size(); i++) {
+// 		if (i == currentTriangleIndex) continue;
+
+
+
+// 		// else
+// 		// {
+// 		// 	glm::vec3 c = sphere.centre_;
+// 		// 	float radius = sphere.radius_l
+// 		// 	glm::vec3 t1 = start - c;
+// 		// 	glm::vec3 t2 = d * t1;
+// 		// 	glm::vec3 t3 = t2*t2 - t1*t1 - radius*radius;
+// 		// 	if(t3 < 0.0f) //no real solution so no intersection
+// 		// 	{
+// 		// 		continue;
+// 		// 	}
+// 		// 	else
+// 		// 	{
+// 		// 		float d1 = -t2 - glm::sqrt(t3);
+// 		// 		float d2 = -t2 + glm::sqrt(t3);
+// 		// 		float distance = std::min(d1, d2);
+// 		// 		closestIntersection.position = start + distance * dir;
+// 		// 		closestIntersection.distance = distance;
+// 		// 		closestIntersection.triangleIndex = i;
+// 		// 	}
+// 		// }
+// 	}
+// 	return closestIntersection.distance != std::numeric_limits<float>::max();
+// }
+
+vec3 SurfaceColour(const Intersection &i, vector<Light> &lights, const vector<Primitive*> &primitives, vec3 incidentRay)
 {
-	return triangles[i.triangleIndex].color * (DirectLight(i, lights, triangles, incidentRay) + IndirectLight());
+	return primitives[i.triangleIndex]->color * (DirectLight(i, lights, primitives, incidentRay) + IndirectLight());
 }
 
 vec3 IndirectLight()
@@ -425,7 +431,7 @@ vec3 IndirectLight()
 }
 
 // Compute the light intensity at an intersection resulting from direct light
-vec3 DirectLight(const Intersection &intersection, vector<Light> &lights, const vector<Triangle> &triangles, vec3 incidentRay) {
+vec3 DirectLight(const Intersection &intersection, vector<Light> &lights, const vector<Primitive*> &primitives, vec3 incidentRay) {
 	float Kdiffuse = 0.8f;
 	float Kspecular = 0.5f;
 	glm::vec3 lightIntensity(0.0f, 0.0f, 0.0f);
@@ -436,23 +442,23 @@ vec3 DirectLight(const Intersection &intersection, vector<Light> &lights, const 
 		vec3 shadowRay = light.position - intersection.position;
 		float lightDistance = glm::length(shadowRay);
 		Intersection shadowRayIntersection;
-		bool hasIntersection = ClosestIntersection(intersection.position, shadowRay, triangles, intersection.triangleIndex, shadowRayIntersection);
+		bool hasIntersection = ClosestIntersection(intersection.position, shadowRay, primitives, intersection.triangleIndex, shadowRayIntersection);
 
 		// If an intersection was found, and it is between the intersection and the light, this light does not reach the intersection
 		if (hasIntersection) {
 			float shadowRayIntersectionDistance = glm::length(intersection.position - shadowRayIntersection.position);
-			if (shadowRayIntersectionDistance <= lightDistance && (triangles[shadowRayIntersection.triangleIndex].refractive_index_ <= 0))
+			if (shadowRayIntersectionDistance <= lightDistance && (primitives[shadowRayIntersection.triangleIndex]->refractive_index_ <= 0))
 				continue; //this needs some revisiting
 		}
 
 		// Otherwise, compute the light's power per unit area at the intersection
 		vec3 B = (light.color / static_cast<float>(4 * lightDistance * lightDistance * M_PI));
 		// Compute a normalising factor based on the angle between the shadow ray and the surface normal
-		float dp = abs(glm::dot(glm::normalize(triangles[intersection.triangleIndex].normal), glm::normalize(shadowRay)));
+		float dp = abs(glm::dot(glm::normalize(intersection.normal), glm::normalize(shadowRay)));
 		lightIntensity += B * glm::max(dp, 0.0f);
 
 		// Compute direction of 'ideal' reflection from light source
-		vec3 idealReflection = glm::normalize(glm::reflect(shadowRay, triangles[intersection.triangleIndex].normal));
+		vec3 idealReflection = glm::normalize(glm::reflect(shadowRay, shadowRayIntersection.normal));
 		// Project actual incident ray onto reflection and use Phong to calculate specular intensity
 		specularIntensity += B * static_cast<float>(std::pow(std::max(0.0f, glm::dot(idealReflection, glm::normalize(incidentRay))), 100));
 

@@ -25,5 +25,5 @@ public:
 	///<summary>Return a vector of the substrings when str is split at delimiters matching regex</summary>
 	static std::vector<std::string> SplitString(const std::string& str, const std::string& regex);
 
-	std::vector<Triangle> ToTriangles(const glm::vec3 transform = glm::vec3(0.0f, 0.0f, 0.0f), const glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f)) const;
+	std::vector<Primitive*> ToPrimitives(const glm::vec3 transform = glm::vec3(0.0f, 0.0f, 0.0f), const glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f)) const;
 };
