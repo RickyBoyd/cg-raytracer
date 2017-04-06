@@ -5,6 +5,7 @@
 #include <string>
 #include <regex>
 #include "Triangle.h"
+#include "Sphere.h"
 #include "Material.h"
 #include "Face.h"
 

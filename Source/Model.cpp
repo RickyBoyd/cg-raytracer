@@ -76,10 +76,30 @@ Model::Model(std::string filename)
 			auto face = Face(vertices, std::make_shared<std::vector<glm::vec2>>(texture_coords), std::make_shared<glm::vec3>(normal), material);
 			faces_.push_back(std::make_shared<Face>(face));
 		}
-		// else if (tokens[0].compare("f") == 0)
-		// {
+		else if (tokens[0].compare("s") == 0)
+		{
+			std::vector<std::string> vertex1 = SplitString(tokens[1], "/");
+			float radius = 1.0f;
+			try
+			{
+				radius = std::stof(tokens[2]);
+			}
+			catch (std::exception e) {}
 
-		// }
+			std::vector<glm::vec3> vertices{};
+			// If vertex coordinates have first part, retrieve the vertices for the face
+			if (vertex1.size() >= 1)
+			{
+				try
+				{
+					vertices.push_back(vertices_[std::stoi(vertex1[0]) - 1]);
+				}
+				catch (std::exception e) {}
+			}
+
+			auto face = Face(vertices, radius, material);
+			faces_.push_back(std::make_shared<Face>(face));
+		}
 		else if (tokens[0].compare("vn") == 0)
 		{
 			auto normal = glm::vec3(std::stof(tokens[1]), std::stof(tokens[2]), std::stof(tokens[3]));

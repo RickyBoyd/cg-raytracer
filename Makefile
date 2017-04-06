@@ -6,9 +6,9 @@ B_DIR=Build
 EXEC=$(B_DIR)/$(FILE)
 
 # default build settings
-CC_OPTS=-c -pipe -Wall -Wno-switch -ggdb -g3 -Ofast -std=c++1z -lstdc++fs
+CC_OPTS=-c -pipe -Wall -Wno-switch -ggdb -g3 -std=c++1z
 LN_OPTS=-lstdc++fs
-CC=g++
+CC=g++-6
 
 SDL_CFLAGS := $(shell sdl-config --cflags)
 GLM_CFLAGS := -I$(GLMDIR)

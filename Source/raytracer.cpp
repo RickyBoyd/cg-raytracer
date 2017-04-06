@@ -92,6 +92,11 @@ int main(int argc, char *argv[]) {
 		std::vector<Light> { Light{ vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
 		Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
 
+	auto cornellBoxSphereScene = Scene(
+		std::vector<ModelInstance> { ModelInstance(Model("Resources/cornell_sphere.obj")) },
+		std::vector<Light> { Light{ vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
+		Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
+
 	// auto bunnyBoxScene = Scene(
 	// 	std::vector<ModelInstance> { 
 	// 		ModelInstance(Model("Resources/cornell_box_empty.obj")),
@@ -120,7 +125,7 @@ int main(int argc, char *argv[]) {
 		Camera{ glm::vec3(0.0f, 4.0f, -7.0f), 30.0f, 0.0f, 0.0f });
 #endif
 
-	Scene &scene = cornellBoxTransparentScene;
+	Scene &scene = cornellBoxSphereScene;
 
 	std::vector<Primitive*> scenePrimitives = scene.ToPrimitives();
 	cout << "Loaded " << scenePrimitives.size() << " primtives" << endl;
@@ -296,6 +301,7 @@ vec3 Trace(vec3 startPos, vec3 incidentRay, vector<Light> lights, const vector<P
 	// Find an intersection of this ray with the model, if exists
 	float bias = 1e-3;
 	Intersection maybeIntersection;
+	incidentRay = glm::normalize(incidentRay);
 	bool hasIntersection = ClosestIntersection(startPos, incidentRay, primitives, maybeIntersection);
 	if (!hasIntersection)
 	{
@@ -448,6 +454,7 @@ vec3 DirectLight(const Intersection &intersection, vector<Light> &lights, const 
 		vec3 shadowRay = light.position - intersection.position;
 		float lightDistance = glm::length(shadowRay);
 		Intersection shadowRayIntersection;
+		shadowRay = glm::normalize(shadowRay);
 		bool hasIntersection = ClosestIntersection(intersection.position + intersection.normal * bias, shadowRay, primitives, shadowRayIntersection);
 
 		// If an intersection was found, and it is between the intersection and the light, this light does not reach the intersection
