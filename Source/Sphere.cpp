@@ -7,7 +7,7 @@ Sphere::Sphere(glm::vec3 centre, float radius, glm::vec3 color, float reflectivi
 
 glm::vec3 Sphere::ComputeNormal(glm::vec3 point)
 {
-	return glm::normalize(centre - point);
+	return glm::normalize(point - centre);
 }
 
 // Intersects ray r = p + td, |d| = 1, with sphere s and, if intersecting, 
@@ -40,39 +40,3 @@ void Sphere::Intersect(glm::vec3 start, glm::vec3 dir, Intersection &intersectio
 		intersection.normal = ComputeNormal(q);
 	}
 }
-
-// void Sphere::Intersect(glm::vec3 start, glm::vec3 dir, Intersection &intersection, int i)
-// {
-// 	// Calculate ray start's offset from the sphere center
-// 	float3 p = s - c;
-
-// 	float rSquared = r * r;
-// 	float p_d = dot(p, d);
-
-// 	// The sphere is behind or surrounding the start point.
-// 	if(p_d > 0 || dot(p, p) < rSquared) return;
-
-// 	// Flatten p into the plane passing through c perpendicular to the ray.
-// 	// This gives the closest approach of the ray to the center.
-// 	float3 a = p - p_d * d;
-
-// 	float aSquared = dot(a, a);
-
-// 	// Closest approach is outside the sphere.
-// 	if(aSquared > rSquared)
-// 	return NO_COLLISION;
-
-// 	// Calculate distance from plane where ray enters/exits the sphere.    
-// 	float h = sqrt(rSquared - aSquared);
-
-// 	// Calculate intersection point relative to sphere center.
-// 	float3 i = a - h * d;
-
-// 	float3 intersection = c + i;
-// 	float3 normal = i/r;
-// 	// We've taken a shortcut here to avoid a second square root.
-// 	// Note numerical errors can make the normal have length slightly different from 1.
-// 	// If you need higher precision, you may need to perform a conventional normalization.
-
-// 	return (intersection, normal);
-// }
