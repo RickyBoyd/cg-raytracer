@@ -2,6 +2,9 @@
 #include <regex>
 #include <fstream>
 #include <memory>
+#include <experimental/filesystem>
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 Material::Material() {}
 
@@ -13,11 +16,14 @@ Material::Material(std::string name, glm::vec3 ambient_colour, glm::vec3 diffuse
 
 Material::~Material()
 {
+	//stbi_image_free(ambient_texture_);
+	//stbi_image_free(diffuse_texture_);
 }
 
 std::vector<std::shared_ptr<Material>> Material::LoadMaterials(std::string filename)
 {
-	std::ifstream is(filename);
+	auto path = new std::experimental::filesystem::path(filename);
+	std::ifstream is(path->string());
 
 	std::vector<std::shared_ptr<Material>> materials;
 	Material *material = nullptr;
@@ -74,6 +80,30 @@ std::vector<std::shared_ptr<Material>> Material::LoadMaterials(std::string filen
 		else if (tokens[0].compare("Re") == 0)
 		{
 			material->reflectivity_ = std::stof(tokens[1]);
+		}
+		else if (tokens[0].compare("map_Ka") == 0)
+		{
+			material->ambient_texture_ = stbi_load(path->replace_filename(tokens[1]).string().c_str(), &material->ambient_texture_x_, &material->ambient_texture_y_, &material->ambient_texture_n_, 0);
+		}
+		else if (tokens[0].compare("map_Kd") == 0)
+		{
+			material->diffuse_texture_ = stbi_load(tokens[1].c_str(), &material->diffuse_texture_x_, &material->diffuse_texture_y_, &material->diffuse_texture_n_, 0);
+		}
+		else if (tokens[0].compare("map_d") == 0)
+		{
+			
+		}
+		else if (tokens[0].compare("map_bump") == 0 || tokens[0].compare("bump"))
+		{
+
+		}
+		else if (tokens[0].compare("disp") == 0)
+		{
+
+		}
+		else if (tokens[0].compare("decal") == 0)
+		{
+
 		}
 	}
 

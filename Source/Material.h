@@ -26,6 +26,11 @@ public:
 	glm::vec3 ambient_colour_;
 	glm::vec3 diffuse_colour_;
 	glm::vec3 specular_colour_;
+	unsigned char* ambient_texture_;
+	int ambient_texture_x_, ambient_texture_y_, ambient_texture_n_;
+	unsigned char* diffuse_texture_;
+	int diffuse_texture_x_, diffuse_texture_y_, diffuse_texture_n_;
+
 	float specular_exponent_ = 50.0f;
 	float transparency_ = 0.0f;
 	IlluminationModel illumination_model_;

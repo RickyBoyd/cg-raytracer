@@ -71,7 +71,16 @@ bool Refract(vec3 d, vec3 normal, float n, vec3 &t);
 
 vec3 Reflect(vec3 d, vec3 normal);
 
+void DisplaySampleTexture();
+
 int main(int argc, char *argv[]) {
+
+	if (argc > 1 && strncmp(argv[1], "texture", 7) == 0)
+	{
+		DisplaySampleTexture();
+		return 0;
+	}
+
 	screen = InitializeSDL(SCREEN_WIDTH, SCREEN_HEIGHT);
 	t = SDL_GetTicks();    // Set start value for timer.
 
@@ -517,4 +526,34 @@ void Interpolate(float a, float b, vector<float> &result) {
 void AddLight(vec3 pos, vec3 color, vector<Light> &lights) {
 	Light light = { pos, color };
 	lights.push_back(light);
+}
+
+void DisplaySampleTexture()
+{
+	auto materials = Material::LoadMaterials("Resources/textured.mtl");
+	vector<std::shared_ptr<Material>>::iterator cube_material = std::find_if(materials.begin(), materials.end(), [](shared_ptr<Material> m) { return m->name_ == "cube"; });
+	if (cube_material != materials.end())
+	{
+		shared_ptr<Material> m = *cube_material;
+		screen = InitializeSDL(m->ambient_texture_x_, m->ambient_texture_y_);
+
+		while (NoQuitMessageSDL()) {
+			if (SDL_MUSTLOCK(screen))
+				SDL_LockSurface(screen);
+
+			for (int y = 0; y < m->ambient_texture_y_; y++) {
+				for (int x = 0; x < m->ambient_texture_x_; x++) {
+					PutPixelSDL(screen, x, y, glm::vec3(
+						float(m->ambient_texture_[(y * m->ambient_texture_x_ * m->ambient_texture_n_) + (x * m->ambient_texture_n_)]) / 255.0f,
+						float(m->ambient_texture_[(y * m->ambient_texture_x_ * m->ambient_texture_n_) + (x * m->ambient_texture_n_) + 1]) / 255.0f,
+						float(m->ambient_texture_[(y * m->ambient_texture_x_ * m->ambient_texture_n_) + (x * m->ambient_texture_n_) + 2]) / 255.0f));
+				}
+			}
+
+			if (SDL_MUSTLOCK(screen))
+				SDL_UnlockSurface(screen);
+
+			SDL_UpdateRect(screen, 0, 0, 0, 0);
+		}
+	}
 }
