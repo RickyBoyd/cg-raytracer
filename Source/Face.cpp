@@ -36,24 +36,55 @@ Primitive* Face::ToPrimitive(glm::vec3 transform, glm::vec3 scale)
 			material_->refractive_index_);
 	}
 	else if (normal_ != nullptr) {
-		primitive = new Triangle(
-			vertices_[0] * scale + transform,
-			vertices_[1] * scale + transform,
-			vertices_[2] * scale + transform,
-			material_,
-			*normal_, 
-			material_->reflectivity_,
-			material_->refractive_index_);
+		if (texture_coords_->size() == 3)
+		{
+			primitive = new Triangle(
+				vertices_[0] * scale + transform,
+				vertices_[1] * scale + transform,
+				vertices_[2] * scale + transform,
+				(*texture_coords_)[0],
+				(*texture_coords_)[1],
+				(*texture_coords_)[2],
+				material_,
+				*normal_,
+				material_->reflectivity_,
+				material_->refractive_index_);
+		} else
+		{
+			primitive = new Triangle(
+				vertices_[0] * scale + transform,
+				vertices_[1] * scale + transform,
+				vertices_[2] * scale + transform,
+				material_,
+				*normal_,
+				material_->reflectivity_,
+				material_->refractive_index_);
+		}
 	}
 	else
 	{
-		primitive = new Triangle(
-			vertices_[0] * scale + transform,
-			vertices_[0] * scale + transform,
-			vertices_[0] * scale + transform,
-			material_,
-			material_->reflectivity_,
-			material_->refractive_index_);
+		if (texture_coords_->size() == 3)
+		{
+			primitive = new Triangle(
+				vertices_[0] * scale + transform,
+				vertices_[1] * scale + transform,
+				vertices_[2] * scale + transform,
+				(*texture_coords_)[0],
+				(*texture_coords_)[1],
+				(*texture_coords_)[2],
+				material_,
+				material_->reflectivity_,
+				material_->refractive_index_);
+		} else
+		{
+			primitive = new Triangle(
+				vertices_[0] * scale + transform,
+				vertices_[1] * scale + transform,
+				vertices_[2] * scale + transform,
+				material_,
+				material_->reflectivity_,
+				material_->refractive_index_);
+		}
 	}
 	return primitive;
 }

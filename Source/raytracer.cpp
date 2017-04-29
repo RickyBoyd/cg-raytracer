@@ -92,31 +92,38 @@ int main(int argc, char *argv[]) {
 		Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
 
 	auto cornellBoxScene = Scene(
-		std::vector<ModelInstance> { ModelInstance(Model("Resources/cornell_box.obj")) },
+		std::vector<ModelInstance> { 
+			ModelInstance(Model("Resources/cornell_box.obj")), 
+			ModelInstance(Model("Resources/blocks.obj")) 
+		},
 		std::vector<Light> { Light { vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
 		Camera { glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
 
 	auto cornellBoxTransparentScene = Scene(
-		std::vector<ModelInstance> { ModelInstance(Model("Resources/cornell_box_transparency.obj")) },
+		std::vector<ModelInstance> { 
+			ModelInstance(Model("Resources/cornell_box.obj")), 
+			ModelInstance(Model("Resources/blocks_transparent.obj")) 
+		},
 		std::vector<Light> { Light{ vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
 		Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
 
 	auto cornellBoxSphereScene = Scene(
 		std::vector<ModelInstance> { 
-			ModelInstance(Model("Resources/cornell_box_empty.obj")), 
+			ModelInstance(Model("Resources/cornell_box.obj")), 
 			ModelInstance(Model("Resources/sphere.obj"), glm::vec3(0, 0.5, 0)),
 			ModelInstance(Model("Resources/sphere_glass.obj"), glm::vec3(0, -0.5, 0))
 		},
 		std::vector<Light> { Light{ vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
 		Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
 
-	// auto bunnyBoxScene = Scene(
-	// 	std::vector<ModelInstance> { 
-	// 		ModelInstance(Model("Resources/cornell_box_empty.obj")),
-	// 		ModelInstance(Model("Resources/bunny_transparent.obj"), glm::vec3(0.0f, -1.5f, 0.0f), glm::vec3(12.0f, 12.0f, 12.0f)) 
-	// 	},
-	// 	std::vector<Light> { Light{ vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
-	// 	Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
+	auto cornellBoxTexturedScene = Scene(
+		std::vector<ModelInstance> { 
+			ModelInstance(Model("Resources/cornell_box.obj")), 
+			ModelInstance(Model("Resources/cube_textured.obj"), glm::vec3(-0.5f, -0.5f, -0.5f))
+		},
+		std::vector<Light> { Light{ vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
+		Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
+
 
 #ifdef IMPORT_COMPLEX_MODELS
 	auto bunnyScene = Scene(
@@ -136,9 +143,18 @@ int main(int argc, char *argv[]) {
 			Light{ vec3(-3.0f, 4.0f, 2.0f), 100.0f * vec3(1,1,1) },
 			Light{ vec3(-3.0f, 4.0f, -2.0f), 30.0f * vec3(1,1,1) }},
 		Camera{ glm::vec3(0.0f, 4.0f, -7.0f), 30.0f, 0.0f, 0.0f });
+
+
+	auto bunnyBoxScene = Scene(
+		std::vector<ModelInstance> { 
+			ModelInstance(Model("Resources/cornell_box_empty.obj")),
+			ModelInstance(Model("Resources/bunny_transparent.obj"), glm::vec3(0.0f, -1.5f, 0.0f), glm::vec3(12.0f, 12.0f, 12.0f)) 
+		},
+		std::vector<Light> { Light{ vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
+		Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
 #endif
 
-	Scene &scene = cornellBoxSphereScene;
+	Scene &scene = cornellBoxTexturedScene;
 
 	std::vector<Primitive*> scenePrimitives = scene.ToPrimitives();
 	cout << "Loaded " << scenePrimitives.size() << " primtives" << endl;
@@ -446,8 +462,8 @@ bool ClosestIntersection(vec3 start, vec3 dir, const vector<Primitive*> &primiti
 
 vec3 SurfaceColour(const Intersection &i, vector<Light> &lights, const vector<Primitive*> &primitives, vec3 incidentRay)
 {
-	return primitives[i.index]->GetDiffuseColour(0, 0) * DirectLight(i, lights, primitives, incidentRay) +
-		primitives[i.index]->GetAmbientColour(0, 0) * IndirectLight();
+	return primitives[i.index]->GetDiffuseColour(i) * DirectLight(i, lights, primitives, incidentRay) +
+		primitives[i.index]->GetAmbientColour(i) * IndirectLight();
 }
 
 vec3 IndirectLight()

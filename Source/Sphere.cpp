@@ -1,4 +1,6 @@
 #include "Sphere.h"
+#include <glm/detail/type_mat.hpp>
+#include <glm/detail/type_mat.hpp>
 
 Sphere::Sphere(glm::vec3 centre, float radius, glm::vec3 colour, float reflectivity = 0.0f, float refractive_index = 1.0f)
 	: Primitive(reflectivity, refractive_index), colour_(colour), centre_(centre), radius_(radius)
@@ -41,12 +43,12 @@ void Sphere::Intersect(glm::vec3 start, glm::vec3 dir, Intersection &intersectio
 	}
 }
 
-glm::vec3 Sphere::GetAmbientColour(int u, int v)
+glm::vec3 Sphere::GetAmbientColour(const Intersection& i)
 {
 	return colour_;
 }
 
-glm::vec3 Sphere::GetDiffuseColour(int u, int v)
+glm::vec3 Sphere::GetDiffuseColour(const Intersection& i)
 {
 	return colour_;
 }

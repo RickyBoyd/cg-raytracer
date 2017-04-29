@@ -1,5 +1,7 @@
 #include "Triangle.h"
 #include "Material.h"
+#include <glm/detail/type_mat.hpp>
+#include <glm/detail/type_mat.hpp>
 
 Triangle::Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, std::shared_ptr<Material> material, float reflectivity = 0.0f, float refractive_index = 1.0f)
 	: Primitive(reflectivity, refractive_index), v0_(v0), v1_(v1), v2_(v2), material_(material)
@@ -9,6 +11,16 @@ Triangle::Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, std::shared_ptr<Mat
 
 Triangle::Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, std::shared_ptr<Material> material, glm::vec3 normal, float reflectivity = 0.0f, float refractive_index = 1.0f)
 	: Primitive(reflectivity, refractive_index), v0_(v0), v1_(v1), v2_(v2), normal_(normal), material_(material)
+{
+}
+
+Triangle::Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec2 vt0, glm::vec2 vt1, glm::vec2 vt2, std::shared_ptr<Material> material, float reflectivity, float refractive_index)
+	: Primitive(reflectivity, refractive_index), v0_(v0), v1_(v1), v2_(v2), vt0_(vt0), vt1_(vt1), vt2_(vt2), material_(material)
+{
+}
+
+Triangle::Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec2 vt0, glm::vec2 vt1, glm::vec2 vt2, std::shared_ptr<Material> material, glm::vec3 normal, float reflectivity, float refractive_index)
+	: Primitive(reflectivity, refractive_index), v0_(v0), v1_(v1), v2_(v2), vt0_(vt0), vt1_(vt1), vt2_(vt2), normal_(normal), material_(material)
 {
 }
 
@@ -53,15 +65,19 @@ void Triangle::Intersect(glm::vec3 start, glm::vec3 dir, Intersection &intersect
 		intersection.distance = t;
 		intersection.index = i;
 		intersection.normal = normal_;
+		intersection.u = u;
+		intersection.v = v;
 	}
 }
 
-glm::vec3 Triangle::GetAmbientColour(int u, int v)
+glm::vec3 Triangle::GetAmbientColour(const Intersection& i)
 {
-	return material_->GetAmbientColour(u, v);
+	glm::vec2 uv = vt0_ + (vt1_ - vt0_) * i.u + (vt2_ - vt0_) * i.v;
+	return material_->GetAmbientColour(uv.x, uv.y);
 }
 
-glm::vec3 Triangle::GetDiffuseColour(int u, int v)
+glm::vec3 Triangle::GetDiffuseColour(const Intersection& i)
 {
-	return material_->GetDiffuseColour(u, v);
+	glm::vec2 uv = vt0_ + (vt1_ - vt0_) * i.u + (vt2_ - vt0_) * i.v;
+	return material_->GetDiffuseColour(uv.x, uv.y);
 }
