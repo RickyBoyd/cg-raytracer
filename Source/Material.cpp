@@ -20,6 +20,30 @@ Material::~Material()
 	//stbi_image_free(diffuse_texture_);
 }
 
+glm::vec3 Material::GetAmbientColour(int u, int v) const
+{
+	if (ambient_texture_ == nullptr || u >= ambient_texture_x_ || v >= ambient_texture_y_)
+	{
+		return ambient_colour_;
+	}
+	return glm::vec3(
+		float(ambient_texture_[(v * ambient_texture_x_ * ambient_texture_n_) + (u * ambient_texture_n_)]) / 255.0f,
+		float(ambient_texture_[(v * ambient_texture_x_ * ambient_texture_n_) + (u * ambient_texture_n_) + 1]) / 255.0f,
+		float(ambient_texture_[(v * ambient_texture_x_ * ambient_texture_n_) + (u * ambient_texture_n_) + 2]) / 255.0f);
+}
+
+glm::vec3 Material::GetDiffuseColour(int u, int v) const
+{
+	if (diffuse_texture_ == nullptr || u >= diffuse_texture_x_ || v >= diffuse_texture_y_)
+	{
+		return diffuse_colour_;
+	}
+	return glm::vec3(
+		float(diffuse_texture_[(v * diffuse_texture_x_ * diffuse_texture_n_) + (u * diffuse_texture_n_)]) / 255.0f,
+		float(diffuse_texture_[(v * diffuse_texture_x_ * diffuse_texture_n_) + (u * diffuse_texture_n_) + 1]) / 255.0f,
+		float(diffuse_texture_[(v * diffuse_texture_x_ * diffuse_texture_n_) + (u * diffuse_texture_n_) + 2]) / 255.0f);
+}
+
 std::vector<std::shared_ptr<Material>> Material::LoadMaterials(std::string filename)
 {
 	auto path = new std::experimental::filesystem::path(filename);

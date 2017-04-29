@@ -41,6 +41,9 @@ public:
 	Material(std::string name, glm::vec3 ambient_colour, glm::vec3 diffuse_colour, glm::vec3 specular_colour, float specular_exponent, float reflectivity);
 	~Material();
 
+	glm::vec3 GetAmbientColour(int u, int v) const;
+	glm::vec3 GetDiffuseColour(int u, int v) const;
+
 	static std::vector<std::shared_ptr<Material> > LoadMaterials(std::string filename);
 	static std::vector<std::string> SplitString(const std::string& str, const std::string& regex);
 };

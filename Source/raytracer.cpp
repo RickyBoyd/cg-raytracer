@@ -446,7 +446,8 @@ bool ClosestIntersection(vec3 start, vec3 dir, const vector<Primitive*> &primiti
 
 vec3 SurfaceColour(const Intersection &i, vector<Light> &lights, const vector<Primitive*> &primitives, vec3 incidentRay)
 {
-	return primitives[i.index]->color * (DirectLight(i, lights, primitives, incidentRay) + IndirectLight());
+	return primitives[i.index]->GetDiffuseColour(0, 0) * DirectLight(i, lights, primitives, incidentRay) +
+		primitives[i.index]->GetAmbientColour(0, 0) * IndirectLight();
 }
 
 vec3 IndirectLight()

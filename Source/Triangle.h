@@ -1,23 +1,26 @@
 #pragma once
 
 #include "Primitive.h"
+#include <memory>
+
+class Material;
 
 class Triangle: public Primitive
 {
 public:
-	glm::vec3 v0;
-	glm::vec3 v1;
-	glm::vec3 v2;
-	glm::vec3 normal;
-	// glm::vec3 color;
-	// float reflectivity_;
-	// float refractive_index_;
+	glm::vec3 v0_;
+	glm::vec3 v1_;
+	glm::vec3 v2_;
+	glm::vec3 normal_;
+	std::shared_ptr<Material> material_;
 
-	Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 color, float reflectivity, float refractive_index);
+	Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, std::shared_ptr<Material> material, float reflectivity, float refractive_index);
 
-	Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 color, glm::vec3 normal, float reflectivity, float refractive_index);
+	Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, std::shared_ptr<Material> material, glm::vec3 normal, float reflectivity, float refractive_index);
 
 	void ComputeNormal();
 
-	void Intersect(glm::vec3 start, glm::vec3 dir, Intersection &intersection, int i);
+	void Intersect(glm::vec3 start, glm::vec3 dir, Intersection &intersection, int i) override;
+	glm::vec3 GetAmbientColour(int u, int v) override;
+	glm::vec3 GetDiffuseColour(int u, int v) override;
 };

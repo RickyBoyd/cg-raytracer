@@ -1,13 +1,13 @@
 #include "Sphere.h"
 
-Sphere::Sphere(glm::vec3 centre, float radius, glm::vec3 color, float reflectivity = 0.0f, float refractive_index = 1.0f)
-	: Primitive(color, reflectivity, refractive_index), centre(centre), radius(radius)
+Sphere::Sphere(glm::vec3 centre, float radius, glm::vec3 colour, float reflectivity = 0.0f, float refractive_index = 1.0f)
+	: Primitive(reflectivity, refractive_index), colour_(colour), centre_(centre), radius_(radius)
 {
 }
 
-glm::vec3 Sphere::ComputeNormal(glm::vec3 point)
+glm::vec3 Sphere::ComputeNormal(glm::vec3 point) const
 {
-	return glm::normalize(point - centre);
+	return glm::normalize(point - centre_);
 }
 
 // Intersects ray r = p + td, |d| = 1, with sphere s and, if intersecting, 
@@ -15,9 +15,9 @@ glm::vec3 Sphere::ComputeNormal(glm::vec3 point)
 
 void Sphere::Intersect(glm::vec3 start, glm::vec3 dir, Intersection &intersection, int i) 
 {
-	glm::vec3 m = start - centre; 
+	glm::vec3 m = start - centre_; 
 	float b = glm::dot(m, dir); 
-	float c = glm::dot(m, m) - radius * radius; 
+	float c = glm::dot(m, m) - radius_ * radius_; 
 
 	// Exit if r’s origin outside s (c > 0) and r pointing away from s (b > 0) 
 	if (c > 0.0f && b > 0.0f) return; 
@@ -39,4 +39,14 @@ void Sphere::Intersect(glm::vec3 start, glm::vec3 dir, Intersection &intersectio
 		intersection.index = i;
 		intersection.normal = ComputeNormal(q);
 	}
+}
+
+glm::vec3 Sphere::GetAmbientColour(int u, int v)
+{
+	return colour_;
+}
+
+glm::vec3 Sphere::GetDiffuseColour(int u, int v)
+{
+	return colour_;
 }

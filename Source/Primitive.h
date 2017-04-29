@@ -12,12 +12,15 @@ struct Intersection
 class Primitive
 {
 public:
-	glm::vec3 color;
 	float reflectivity_;
 	float refractive_index_;
 
+	virtual ~Primitive() = default;
+
+	virtual glm::vec3 GetAmbientColour(int u, int v) = 0;
+	virtual glm::vec3 GetDiffuseColour(int u, int v) = 0;
 	virtual void Intersect(glm::vec3 start, glm::vec3 dir, Intersection &intersection, int i) = 0;
 
 protected:
-	Primitive(glm::vec3 color, float reflectivity_, float refractive_index_);
+	Primitive(float reflectivity_, float refractive_index_);
 };
