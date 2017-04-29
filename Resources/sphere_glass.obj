@@ -1,0 +1,7 @@
+mtllib glass.mtl
+
+v	0	0	0
+
+usemtl glass
+# Sphere
+s 1 0.4

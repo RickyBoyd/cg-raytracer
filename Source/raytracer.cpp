@@ -93,7 +93,11 @@ int main(int argc, char *argv[]) {
 		Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
 
 	auto cornellBoxSphereScene = Scene(
-		std::vector<ModelInstance> { ModelInstance(Model("Resources/cornell_sphere.obj")) },
+		std::vector<ModelInstance> { 
+			ModelInstance(Model("Resources/cornell_box_empty.obj")), 
+			ModelInstance(Model("Resources/sphere.obj"), glm::vec3(0, 0.5, 0)),
+			ModelInstance(Model("Resources/sphere_glass.obj"), glm::vec3(0, -0.5, 0))
+		},
 		std::vector<Light> { Light{ vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
 		Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
 
