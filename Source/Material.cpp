@@ -20,28 +20,32 @@ Material::~Material()
 	//stbi_image_free(diffuse_texture_);
 }
 
-glm::vec3 Material::GetAmbientColour(int u, int v) const
+glm::vec3 Material::GetAmbientColour(float u, float v) const
 {
-	if (ambient_texture_ == nullptr || u >= ambient_texture_x_ || v >= ambient_texture_y_)
+	if (ambient_texture_ == nullptr || u >= 1.0 || v >= 1.0 || u < 0.0 || v < 0.0)
 	{
 		return ambient_colour_;
 	}
+	int x = round(u * ambient_texture_x_);
+	int y = round(v * ambient_texture_y_);
 	return glm::vec3(
-		float(ambient_texture_[(v * ambient_texture_x_ * ambient_texture_n_) + (u * ambient_texture_n_)]) / 255.0f,
-		float(ambient_texture_[(v * ambient_texture_x_ * ambient_texture_n_) + (u * ambient_texture_n_) + 1]) / 255.0f,
-		float(ambient_texture_[(v * ambient_texture_x_ * ambient_texture_n_) + (u * ambient_texture_n_) + 2]) / 255.0f);
+		float(ambient_texture_[(y * ambient_texture_x_ * ambient_texture_n_) + (x * ambient_texture_n_)]) / 255.0f,
+		float(ambient_texture_[(y * ambient_texture_x_ * ambient_texture_n_) + (x * ambient_texture_n_) + 1]) / 255.0f,
+		float(ambient_texture_[(y * ambient_texture_x_ * ambient_texture_n_) + (x * ambient_texture_n_) + 2]) / 255.0f);
 }
 
-glm::vec3 Material::GetDiffuseColour(int u, int v) const
+glm::vec3 Material::GetDiffuseColour(float u, float v) const
 {
-	if (diffuse_texture_ == nullptr || u >= diffuse_texture_x_ || v >= diffuse_texture_y_)
+	if (diffuse_texture_ == nullptr || u >= 1.0 || v >= 1.0 || u < 0.0 || v < 0.0)
 	{
 		return diffuse_colour_;
 	}
+	int x = round(u * ambient_texture_x_);
+	int y = round(v * ambient_texture_y_);
 	return glm::vec3(
-		float(diffuse_texture_[(v * diffuse_texture_x_ * diffuse_texture_n_) + (u * diffuse_texture_n_)]) / 255.0f,
-		float(diffuse_texture_[(v * diffuse_texture_x_ * diffuse_texture_n_) + (u * diffuse_texture_n_) + 1]) / 255.0f,
-		float(diffuse_texture_[(v * diffuse_texture_x_ * diffuse_texture_n_) + (u * diffuse_texture_n_) + 2]) / 255.0f);
+		float(diffuse_texture_[(y * diffuse_texture_x_ * diffuse_texture_n_) + (x * diffuse_texture_n_)]) / 255.0f,
+		float(diffuse_texture_[(y * diffuse_texture_x_ * diffuse_texture_n_) + (x * diffuse_texture_n_) + 1]) / 255.0f,
+		float(diffuse_texture_[(y * diffuse_texture_x_ * diffuse_texture_n_) + (x * diffuse_texture_n_) + 2]) / 255.0f);
 }
 
 std::vector<std::shared_ptr<Material>> Material::LoadMaterials(std::string filename)
