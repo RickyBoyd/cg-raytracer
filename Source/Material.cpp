@@ -111,7 +111,7 @@ std::vector<std::shared_ptr<Material>> Material::LoadMaterials(std::string filen
 		}
 		else if (tokens[0].compare("map_Kd") == 0)
 		{
-			material->diffuse_texture_ = stbi_load(tokens[1].c_str(), &material->diffuse_texture_x_, &material->diffuse_texture_y_, &material->diffuse_texture_n_, 0);
+			material->diffuse_texture_ = stbi_load(path->replace_filename(tokens[1]).string().c_str(), &material->diffuse_texture_x_, &material->diffuse_texture_y_, &material->diffuse_texture_n_, 0);
 		}
 		else if (tokens[0].compare("map_d") == 0)
 		{
