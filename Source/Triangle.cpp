@@ -34,7 +34,7 @@ void Triangle::ComputeNormal()
 void Triangle::Intersect(glm::vec3 start, glm::vec3 dir, Intersection &intersection, int i)
 {
 	// No intersection if we're hitting the back face
-	if (glm::dot(dir, normal) >= 0.0) 
+	if (glm::dot(dir, normal_) >= 0.0) return;
 	
 	// Use Cramer's rule to calculate intersection p
 	glm::vec3 e1 = v1_ - v0_;
