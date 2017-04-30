@@ -33,8 +33,13 @@ void Triangle::ComputeNormal()
 
 void Triangle::Intersect(glm::vec3 start, glm::vec3 dir, Intersection &intersection, int i)
 {
+	// No intersection if we're hitting the back face
+	if (glm::dot(dir, normal) >= 0.0) 
+	
+	// Use Cramer's rule to calculate intersection p
 	glm::vec3 e1 = v1_ - v0_;
 	glm::vec3 e2 = v2_ - v0_;
+
 	glm::vec3 pvec = glm::cross(dir, e2);
 	float det = glm::dot(e1, pvec);
 
@@ -60,6 +65,7 @@ void Triangle::Intersect(glm::vec3 start, glm::vec3 dir, Intersection &intersect
 
 	float t = glm::dot(e2, qvec) * invDet;
 
+	// If the intersection is nearer than the existing one, overwrite it
 	if (t > 0 && t < intersection.distance) {
 		intersection.position = v0_ + u * e1 + v * e2;
 		intersection.distance = t;
