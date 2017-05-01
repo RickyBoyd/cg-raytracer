@@ -501,7 +501,7 @@ vec3 DirectLight(const Intersection &intersection, vector<Light> &lights, const 
 		lightIntensity += B * glm::max(dp, 0.0f);
 
 		// Compute direction of 'ideal' reflection from light source
-		vec3 idealReflection = glm::normalize(glm::reflect(shadowRay, shadowRayIntersection.normal));
+		vec3 idealReflection = glm::normalize(glm::reflect(shadowRay, intersection.normal));
 		// Project actual incident ray onto reflection and use Phong to calculate specular intensity
 		specularIntensity += B * static_cast<float>(std::pow(std::max(0.0f, glm::dot(idealReflection, glm::normalize(incidentRay))), 100));
 
