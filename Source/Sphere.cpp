@@ -52,3 +52,19 @@ glm::vec3 Sphere::GetDiffuseColour(const Intersection& i)
 {
 	return colour_;
 }
+
+glm::vec3 Sphere::GetSpecularColour(const Intersection& i)
+{
+	// TODO: store actual material in Sphere object
+	return glm::vec3(1.0f, 1.0f, 1.0f);
+}
+
+float Sphere::GetSpecularIntensity(const Intersection& i)
+{
+	return 1.0f;
+}
+
+float Sphere::GetSpecularExponent(const Intersection& i)
+{
+	return 100.0f;
+}

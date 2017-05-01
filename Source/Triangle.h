@@ -30,4 +30,7 @@ public:
 	void Intersect(glm::vec3 start, glm::vec3 dir, Intersection &intersection, int i) override;
 	glm::vec3 GetAmbientColour(const Intersection& i) override;
 	glm::vec3 GetDiffuseColour(const Intersection& i) override;
+	glm::vec3 GetSpecularColour(const Intersection& i) override;
+	float GetSpecularIntensity(const Intersection& i) override;
+	float GetSpecularExponent(const Intersection& i) override;
 };

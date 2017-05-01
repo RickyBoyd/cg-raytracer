@@ -20,6 +20,9 @@ public:
 
 	virtual glm::vec3 GetAmbientColour(const Intersection& i) = 0;
 	virtual glm::vec3 GetDiffuseColour(const Intersection& i) = 0;
+	virtual glm::vec3 GetSpecularColour(const Intersection& i) = 0;
+	virtual float GetSpecularExponent(const Intersection& i) = 0;
+	virtual float GetSpecularIntensity(const Intersection& i) = 0;
 	virtual void Intersect(glm::vec3 start, glm::vec3 dir, Intersection &intersection, int i) = 0;
 
 protected:

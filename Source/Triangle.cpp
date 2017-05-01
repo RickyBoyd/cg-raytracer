@@ -87,3 +87,20 @@ glm::vec3 Triangle::GetDiffuseColour(const Intersection& i)
 	glm::vec2 uv = vt0_ + (vt1_ - vt0_) * i.u + (vt2_ - vt0_) * i.v;
 	return material_->GetDiffuseColour(uv.x, uv.y);
 }
+
+glm::vec3 Triangle::GetSpecularColour(const Intersection& i)
+{
+	glm::vec2 uv = vt0_ + (vt1_ - vt0_) * i.u + (vt2_ - vt0_) * i.v;
+	return material_->GetSpecularColour(uv.x, uv.y);
+}
+
+float Triangle::GetSpecularIntensity(const Intersection& i)
+{
+	glm::vec2 uv = vt0_ + (vt1_ - vt0_) * i.u + (vt2_ - vt0_) * i.v;
+	return material_->GetSpecularIntensity(uv.x, uv.y);
+}
+
+float Triangle::GetSpecularExponent(const Intersection& i)
+{
+	return material_->specular_exponent_;
+}
