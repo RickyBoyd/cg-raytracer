@@ -17,6 +17,7 @@ Triangle::Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, std::shared_ptr<Mat
 Triangle::Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec2 vt0, glm::vec2 vt1, glm::vec2 vt2, std::shared_ptr<Material> material, float reflectivity, float refractive_index)
 	: Primitive(reflectivity, refractive_index), v0_(v0), v1_(v1), v2_(v2), vt0_(vt0), vt1_(vt1), vt2_(vt2), material_(material)
 {
+	ComputeNormal();
 }
 
 Triangle::Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec2 vt0, glm::vec2 vt1, glm::vec2 vt2, std::shared_ptr<Material> material, glm::vec3 normal, float reflectivity, float refractive_index)

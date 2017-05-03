@@ -110,8 +110,7 @@ int main(int argc, char *argv[]) {
 	auto cornellBoxSphereScene = Scene(
 		std::vector<ModelInstance> { 
 			ModelInstance(Model("Resources/cornell_box.obj")), 
-			ModelInstance(Model("Resources/sphere.obj"), glm::vec3(0, 0.5, 0)),
-			ModelInstance(Model("Resources/sphere_glass.obj"), glm::vec3(0, -0.5, 0))
+			ModelInstance(Model("Resources/sphere.obj"), glm::vec3(0, 0.5, 0))
 		},
 		std::vector<Light> { Light{ vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
 		Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
@@ -154,7 +153,21 @@ int main(int argc, char *argv[]) {
 		Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
 #endif
 
-	Scene &scene = cornellBoxTexturedScene;
+	Scene &scene = cornellBoxScene;
+
+	if (argc > 1 && strncmp(argv[1], "te", 7) == 0)
+	{
+		scene = cornellBoxTexturedScene;
+	}
+	if (argc > 1 && strncmp(argv[1], "s", 7) == 0)
+	{
+		scene = cornellBoxSphereScene;
+	}
+	if (argc > 1 && strncmp(argv[1], "tr", 7) == 0)
+	{
+		scene = cornellBoxTransparentScene;
+	}
+
 
 	std::vector<Primitive*> scenePrimitives = scene.ToPrimitives();
 	cout << "Loaded " << scenePrimitives.size() << " primtives" << endl;
