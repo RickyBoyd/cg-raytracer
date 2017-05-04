@@ -6,9 +6,9 @@ B_DIR=Build
 EXEC=$(B_DIR)/$(FILE)
 
 # default build settings
-CC_OPTS=-c -pipe -Wall -Wno-switch -ggdb -g3 -std=c++1z -fopenmp -O3
-LN_OPTS=-lstdc++fs -fopenmp
-CC=g++-6
+CC_OPTS=-c -pipe -Wall -Wno-switch -ggdb -g3 -fopenmp -O3 -std=c++11
+LN_OPTS=-L $(BOOST_ROOT)/lib -fopenmp -lboost_system -lboost_filesystem
+CC=g++
 
 SDL_CFLAGS := $(shell sdl-config --cflags)
 GLM_CFLAGS := -I$(GLMDIR)
@@ -24,12 +24,12 @@ Build: all
 
 dir:
 	mkdir -p $(B_DIR)
-	
+
 $(B_DIR)/$(PROGRAM): $(OBJECTS)
 	$(CC) -I$(S_DIR)/ $^ -o $@ $(LN_OPTS) $(SDL_LDFLAGS) $(LDFLAGS)
-	
+
 $(OBJECTS): $(B_DIR)/%.o : $(S_DIR)/%.cpp
-	$(CC) $(CC_OPTS) $(CFLAGS) $(SDL_CFLAGS) $(GLM_CFLAGS) $< -o $@
+	$(CC) $(CC_OPTS) $(CFLAGS) $(SDL_CFLAGS) $(GLM_CFLAGS) -I$(BOOST_ROOT)/include $< -o $@
 
 clean:
-	rm -f $(B_DIR)/* 
+	rm -f $(B_DIR)/*

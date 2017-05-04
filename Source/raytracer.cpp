@@ -92,32 +92,32 @@ int main(int argc, char *argv[]) {
 		Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
 
 	auto cornellBoxScene = Scene(
-		std::vector<ModelInstance> { 
-			ModelInstance(Model("Resources/cornell_box.obj")), 
-			ModelInstance(Model("Resources/blocks.obj")) 
+		std::vector<ModelInstance> {
+			ModelInstance(Model("Resources/cornell_box.obj")),
+			ModelInstance(Model("Resources/blocks.obj"))
 		},
 		std::vector<Light> { Light { vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
 		Camera { glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
 
 	auto cornellBoxTransparentScene = Scene(
-		std::vector<ModelInstance> { 
-			ModelInstance(Model("Resources/cornell_box.obj")), 
-			ModelInstance(Model("Resources/blocks_transparent.obj")) 
+		std::vector<ModelInstance> {
+			ModelInstance(Model("Resources/cornell_box_mirror.obj")),
+			ModelInstance(Model("Resources/blocks_transparent.obj"))
 		},
 		std::vector<Light> { Light{ vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
 		Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
 
 	auto cornellBoxSphereScene = Scene(
-		std::vector<ModelInstance> { 
-			ModelInstance(Model("Resources/cornell_box.obj")), 
-			ModelInstance(Model("Resources/sphere.obj"), glm::vec3(0, 0.5, 0))
+		std::vector<ModelInstance> {
+			ModelInstance(Model("Resources/cornell_box.obj")),
+			ModelInstance(Model("Resources/sphere.obj"), glm::vec3(0, 0, 0))
 		},
 		std::vector<Light> { Light{ vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
 		Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
 
 	auto cornellBoxTexturedScene = Scene(
-		std::vector<ModelInstance> { 
-			ModelInstance(Model("Resources/cornell_box.obj")), 
+		std::vector<ModelInstance> {
+			ModelInstance(Model("Resources/cornell_box.obj")),
 			ModelInstance(Model("Resources/cube_textured.obj"), glm::vec3(-0.5f, -0.5f, -0.5f))
 		},
 		std::vector<Light> { Light{ vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
@@ -131,7 +131,7 @@ int main(int argc, char *argv[]) {
 		Light{ vec3(0.0f, 0.5f, -1.0f), 15.0f * vec3(1,1,1) },
 			Light{ vec3(0.5f, 0.1f, 0.0f), 15.0f * vec3(1,1,1) }},
 		Camera{ glm::vec3(0.0f, 0.1f, -0.15f), 0.0f, 0.0f, 0.0f });
-	
+
 	auto teapotScene = Scene(
 		std::vector<ModelInstance> {
 			ModelInstance(Model("Resources/teapot.obj"), glm::vec3(-3.0f, 0.0f, 0.0f)),
@@ -145,15 +145,15 @@ int main(int argc, char *argv[]) {
 
 
 	auto bunnyBoxScene = Scene(
-		std::vector<ModelInstance> { 
+		std::vector<ModelInstance> {
 			ModelInstance(Model("Resources/cornell_box_empty.obj")),
-			ModelInstance(Model("Resources/bunny_transparent.obj"), glm::vec3(0.0f, -1.5f, 0.0f), glm::vec3(12.0f, 12.0f, 12.0f)) 
+			ModelInstance(Model("Resources/bunny_transparent.obj"), glm::vec3(0.0f, -1.5f, 0.0f), glm::vec3(12.0f, 12.0f, 12.0f))
 		},
 		std::vector<Light> { Light{ vec3(-0.3f, 0.5f, -0.7f), 15.0f * vec3(1,1,1) } },
 		Camera{ glm::vec3(0.0f, 0.0f, -2.0f), 0.0f, 0.0f, 0.0f });
 #endif
 
-	Scene &scene = cornellBoxScene;
+	Scene &scene = cornellBoxTransparentScene;
 
 	if (argc > 1 && strncmp(argv[1], "te", 7) == 0)
 	{

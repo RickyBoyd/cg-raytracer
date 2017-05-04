@@ -1,20 +1,25 @@
 ﻿#include "Model.h"
-#include <experimental/filesystem>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/trim_all.hpp>
+#include <boost/filesystem.hpp>
 
 Model::Model(std::vector<std::shared_ptr<Face>> faces) : faces_(faces) {}
 
 Model::Model(std::string filename)
 {
 	// TODO: implement support for groups/objects
-	auto path = new std::experimental::filesystem::path(filename);
-	std::ifstream is(path->string());
+	auto path = boost::filesystem::path(filename);
+	std::ifstream is(path.string());
 
 	std::shared_ptr<Material> default_material = std::make_shared<Material>("default", glm::vec3(0.75f, 0, 0.75f), glm::vec3(0.75f, 0, 0.75f), glm::vec3(0.75f, 0, 0.75f), 50.0f, 0.0f);
 	std::shared_ptr<Material> material = default_material;
 
 	for (std::string str; std::getline(is, str);)
 	{
-		std::vector<std::string> tokens = SplitString(str, "\\s+");
+		std::vector<std::string> tokens;
+		boost::trim_all(str);
+		boost::split(tokens, str, boost::is_any_of("\t "));
+		std::remove_if(tokens.begin(), tokens.end(), [](std::string t) -> bool { return t.compare("") == 0; });
 
 		if (tokens[0].compare("v") == 0)
 		{
@@ -23,9 +28,10 @@ Model::Model(std::string filename)
 		}
 		else if (tokens[0].compare("f") == 0)
 		{
-			std::vector<std::string> vertex1 = SplitString(tokens[1], "/");
-			std::vector<std::string> vertex2 = SplitString(tokens[2], "/");
-			std::vector<std::string> vertex3 = SplitString(tokens[3], "/");
+			std::vector<std::string> vertex1, vertex2, vertex3;
+			boost::split(vertex1, tokens[1], boost::is_any_of("/"));
+			boost::split(vertex2, tokens[2], boost::is_any_of("/"));
+			boost::split(vertex3, tokens[3], boost::is_any_of("/"));
 
 			std::vector<glm::vec3> vertices{};
 			auto texture_coords = std::vector<glm::vec2>{};
@@ -78,7 +84,8 @@ Model::Model(std::string filename)
 		}
 		else if (tokens[0].compare("s") == 0)
 		{
-			std::vector<std::string> vertex1 = SplitString(tokens[1], "/");
+			std::vector<std::string> vertex1;
+			boost::split(vertex1, tokens[1], boost::is_any_of("/"));
 			float radius = 1.0f;
 			try
 			{
@@ -112,7 +119,8 @@ Model::Model(std::string filename)
 		}
 		else if (tokens[0].compare("mtllib") == 0)
 		{
-			auto materials = Material::LoadMaterials(path->replace_filename(tokens[1]).string());
+			boost::filesystem::path mtl_path = path.parent_path() / boost::filesystem::path(tokens[1]);
+			auto materials = Material::LoadMaterials(mtl_path.string());
 			materials_.insert(materials_.end(), materials.begin(), materials.end());
 		}
 		else if (tokens[0].compare("usemtl") == 0)
@@ -121,14 +129,6 @@ Model::Model(std::string filename)
 			material = *matching;
 		}
 	}
-}
-
-std::vector<std::string> Model::SplitString(const std::string& str, const std::string& regex)
-{
-	std::regex re(regex);
-	std::sregex_token_iterator first( str.begin(), str.end(), re, -1 );
-	std::sregex_token_iterator last;
-	return std::vector<std::string>(first, last);
 }
 
 std::vector<Primitive*> Model::ToPrimitives(const glm::vec3 transform, const glm::vec3 scale) const

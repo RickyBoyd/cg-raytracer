@@ -51,6 +51,4 @@ public:
 	float GetSpecularIntensity(float u, float v) const;
 
 	static std::vector<std::shared_ptr<Material> > LoadMaterials(std::string filename);
-	static std::vector<std::string> SplitString(const std::string& str, const std::string& regex);
 };
-
