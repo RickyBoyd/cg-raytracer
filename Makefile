@@ -1,7 +1,7 @@
 PROGRAM = raytracer
 
-S_DIR=Source
-B_DIR=Build
+S_DIR=src
+B_DIR=build
 
 EXEC=$(B_DIR)/$(FILE)
 

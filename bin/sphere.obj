@@ -1,0 +1,7 @@
+mtllib colours.mtl
+
+v	0	0	0
+
+usemtl red
+# Sphere
+s 1 0.4
