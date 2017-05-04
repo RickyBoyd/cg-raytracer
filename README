@@ -37,5 +37,4 @@ Note: the raytracer must be run from the *parent* of the `bin` directory
 * Pass `te` to show texture-mapped cube (with simple specular map) in Cornell Box
 * Pass `s` to show sphere
 * Pass `tr` to show transparent block and mirrored surface
-* Pass `bunny` to show dynamically imported Stanford Bunny model (slow!)
-* Pass `tbunny` to show transparent Stanford Bunny model (slow!)
+* Pass `tp` to show dynamically imported Utah Teapot model (slow!)

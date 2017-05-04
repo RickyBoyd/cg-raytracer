@@ -126,22 +126,33 @@ int main(int argc, char *argv[]) {
 
 
 #ifdef IMPORT_COMPLEX_MODELS
-	auto bunnyScene = Scene(
+	/*auto bunnyScene = Scene(
 		std::vector<ModelInstance> { ModelInstance(Model("bin/bunny.obj"), glm::vec3(0.0f, 0.0f, 0.0f)) },
 		std::vector<Light> {
 		Light{ vec3(0.0f, 0.5f, -1.0f), 15.0f * vec3(1,1,1) },
 			Light{ vec3(0.5f, 0.1f, 0.0f), 15.0f * vec3(1,1,1) }},
-		Camera{ glm::vec3(0.0f, 0.1f, -0.15f), 0.0f, 0.0f, 0.0f });
+		Camera{ glm::vec3(0.0f, 0.1f, -0.15f), 0.0f, 0.0f, 0.0f });*/
 
 	auto teapotScene = Scene(
 		std::vector<ModelInstance> {
-			ModelInstance(Model("bin/teapot2.obj"), glm::vec3(-3.0f, 0.0f, -1.0f))
+			ModelInstance(Model("bin/teapot.obj"), glm::vec3(0.0f, 0.0f, -3.0f))
+		},
+		std::vector<Light> {
+			Light{ vec3(0.0f, 4.0f, -8.0f), 100.0f * vec3(1,1,1) },
+			Light{ vec3(-3.0f, 4.0f, 2.0f), 100.0f * vec3(1,1,1) },
+			Light{ vec3(-3.0f, 4.0f, -2.0f), 30.0f * vec3(1,1,1) }},
+		Camera{ glm::vec3(0.0f, 4.0f, -7.0f), 30.0f, 0.0f, 0.0f });
+
+	/*auto teapotTransparentscene = Scene(
+		std::vector<ModelInstance> {
+			ModelInstance(Model("bin/cornell_box_empty.obj")),
+			ModelInstance(Model("bin/teapot2.obj"), glm::vec3(0.0f, 0.0f, -3.0f))
 		},
 		std::vector<Light> {
 			Light{ vec3(3.0f, 2.0f, 0.0f), 100.0f * vec3(1,1,1) },
 			Light{ vec3(-3.0f, 4.0f, 2.0f), 100.0f * vec3(1,1,1) },
 			Light{ vec3(-3.0f, 4.0f, -2.0f), 30.0f * vec3(1,1,1) }},
-		Camera{ glm::vec3(0.0f, 4.0f, -7.0f), 30.0f, 0.0f, 0.0f });
+		Camera{ glm::vec3(0.0f, 4.0f, -7.0f), 30.0f, 0.0f, 0.0f });*/
 
 
 	auto bunnyBoxScene = Scene(
@@ -167,18 +178,18 @@ int main(int argc, char *argv[]) {
 	{
 		scene = cornellBoxTransparentScene;
 	}
-	if (argc > 1 && strncmp(argv[1], "tp", 5) == 0)
+	if (argc > 1 && strncmp(argv[1], "teapot", 6) == 0)
 	{
 		scene = teapotScene;
 	}
-	if (argc > 1 && strncmp(argv[1], "tbunny", 6) == 0)
+	if (argc > 1 && strncmp(argv[1], "trb", 3) == 0)
 	{
 		scene = bunnyBoxScene;
 	}
 
 
 	std::vector<Primitive*> scenePrimitives = scene.ToPrimitives();
-	cout << "Loaded " << scenePrimitives.size() << " primtives" << endl;
+	cout << "Loaded " << scenePrimitives.size() << " primitives" << endl;
 
 	while (NoQuitMessageSDL()) {
 		Draw(scene, scenePrimitives);
